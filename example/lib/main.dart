@@ -73,14 +73,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         title: new Text(widget.title),
       ),
       body: AnimatedBackground(
-        particleOptions: const ParticleOptions(
+        particleOptions: ParticleOptions(
+          image: Image.asset('assets/images/star_stroke.png'),
           baseColor: Colors.blue,
           minOpacity: 0.1,
           maxOpacity: 0.4,
           spawnMinSpeed: 30.0,
           spawnMaxSpeed: 70.0,
-          spawnMinRadius: 2.0,
-          spawnMaxRadius: 5.0,
+          spawnMinRadius: 7.0,
+          spawnMaxRadius: 15.0,
+          particleCount: _counter + 1,
         ),
         particlePaint: Paint()
           ..style = PaintingStyle.stroke
