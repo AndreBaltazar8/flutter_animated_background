@@ -1,42 +1,27 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
+import 'package:flutter/services.dart';
 
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Animated Background Demo',
       theme: new ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
-        // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: new MyHomePage(title: 'Animated Background Demo Home Page'),
+      home: new MyHomePage(title: 'Animated Background Demo'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -45,84 +30,408 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  int _counter = 40;
+  double _spawnOpacity = 0.0;
+  double _opacityChangeRate = 0.25;
+  double _minOpacity = 0.1;
+  double _maxOpacity = 0.4;
+  double _minRadius = 7.0;
+  double _maxRadius = 15.0;
+  double _minSpeed = 30.0;
+  double _maxSpeed = 70.0;
+  ParticleBehaviour _behaviour = const RandomMovementBehavior();
+  bool _showSettings = false;
+  ParticleType _particleType = ParticleType.Image;
+  bool _paintFill = false;
+  double _strokeWidth = 1.0;
+  Image _image = Image.asset('assets/images/star_stroke.png');
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return new Scaffold(
-      appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: new Text(widget.title),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.settings_input_component),
+            color: _showSettings ? Colors.amber : Colors.white,
+            onPressed: () {
+              setState(() {
+                _showSettings = !_showSettings;
+              });
+            },
+          ),
+        ],
       ),
       body: AnimatedBackground(
         particleOptions: ParticleOptions(
-          image: Image.asset('assets/images/star_stroke.png'),
+          image: _particleType == ParticleType.Image ? _image : null,
           baseColor: Colors.blue,
-          minOpacity: 0.1,
-          maxOpacity: 0.4,
-          spawnMinSpeed: 30.0,
-          spawnMaxSpeed: 70.0,
-          spawnMinRadius: 7.0,
-          spawnMaxRadius: 15.0,
-          particleCount: _counter + 1,
+          spawnOpacity: _spawnOpacity,
+          opacityChangeRate: _opacityChangeRate,
+          minOpacity: _minOpacity,
+          maxOpacity: _maxOpacity,
+          spawnMinSpeed: _minSpeed,
+          spawnMaxSpeed: _maxSpeed,
+          spawnMinRadius: _minRadius,
+          spawnMaxRadius: _maxRadius,
+          particleCount: _counter,
         ),
         particlePaint: Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0,
+          ..style = _paintFill ? PaintingStyle.fill : PaintingStyle.stroke
+          ..strokeWidth = _strokeWidth,
+        particleBehaviour: _behaviour,
         vsync: this,
-        child: new Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          child: new Column(
-            // Column is also layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug paint" (press "p" in the console where you ran
-            // "flutter run", or select "Toggle Debug Paint" from the Flutter tool
-            // window in IntelliJ) to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              new Text(
-                'You have pushed the button this many times:',
+        child: Stack(
+          children: <Widget>[
+            Container(), // combination of stack and container fills the screen
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: _showSettings ? _buildSettings() : Container(),
               ),
-              new Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.display1,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void _onTypeChange(ParticleType type) {
+    setState(() {
+      _particleType = type;
+      if (_particleType == ParticleType.Image)
+        _counter = math.min(_counter, 100);
+    });
+  }
+
+  Widget _buildParticleTypeSelector(ParticleType type) {
+    return Row(
+      children: <Widget>[
+        Radio<ParticleType>(
+          onChanged: _onTypeChange,
+          value: type,
+          groupValue: _particleType,
+        ),
+        GestureDetector(
+          child: Text(type.toString().split('.')[1]),
+          onTap: () => _onTypeChange(type),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettings() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text('Count:'),
+            Slider(
+              value: _counter.toDouble(),
+              min: 0.0,
+              max: _particleType == ParticleType.Image ? 100.0 : 1000.0,
+              divisions: 100,
+              onChanged: (value) {
+                setState(() {
+                  _counter = value.floor();
+                });
+              },
+            ),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.display1,
+            ),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Spawn opacity:'),
+            Slider(
+              value: _spawnOpacity,
+              min: 0.0,
+              max: 1.0,
+              divisions: 10,
+              onChanged: (value) => setState(() => _spawnOpacity = value),
+            ),
+            Text('${_spawnOpacity.toStringAsFixed(1)}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Opacity rate:'),
+            Slider(
+              value: _opacityChangeRate,
+              min: -2.0,
+              max: 2.0,
+              divisions: 80,
+              onChanged: (value) => setState(() => _opacityChangeRate = value),
+            ),
+            Text('${_opacityChangeRate.toStringAsFixed(2)}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Min opacity:'),
+            Slider(
+              value: _minOpacity,
+              min: 0.0,
+              max: 1.0,
+              divisions: 20,
+              onChanged: (value) {
+                setState(() {
+                  _minOpacity = value;
+                  _maxOpacity = math.max(_maxOpacity, _minOpacity);
+                });
+              },
+            ),
+            Text('${_minOpacity.toStringAsFixed(2)}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Max opacity:'),
+            Slider(
+              value: _maxOpacity,
+              min: 0.0,
+              max: 1.0,
+              divisions: 20,
+              onChanged: (value) {
+                setState(() {
+                  _maxOpacity = value;
+                  _minOpacity = math.min(_minOpacity, _maxOpacity);
+                });
+              },
+            ),
+            Text('${_maxOpacity.toStringAsFixed(2)}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Min radius:'),
+            Slider(
+              value: _minRadius,
+              min: 1.0,
+              max: 100.0,
+              divisions: 99,
+              onChanged: (value) {
+                setState(() {
+                  _minRadius = value;
+                  _maxRadius = math.max(_maxRadius, _minRadius);
+                });
+              },
+            ),
+            Text('${_minRadius.toInt()}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Max radius:'),
+            Slider(
+              value: _maxRadius,
+              min: 1.0,
+              max: 100.0,
+              divisions: 99,
+              onChanged: (value) {
+                setState(() {
+                  _maxRadius = value;
+                  _minRadius = math.min(_minRadius, _maxRadius);
+                });
+              },
+            ),
+            Text('${_maxRadius.toInt()}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Min speed:'),
+            Slider(
+              value: _minSpeed,
+              min: 1.0,
+              max: 100.0,
+              divisions: 99,
+              onChanged: (value) {
+                setState(() {
+                  _minSpeed = value;
+                  _maxSpeed = math.max(_maxSpeed, _minSpeed);
+                });
+              },
+            ),
+            Text('${_minSpeed.toInt()}'),
+          ],
+        ),
+        Row(
+          children: <Widget>[
+            Text('Max speed:'),
+            Slider(
+              value: _maxSpeed,
+              min: 1.0,
+              max: 100.0,
+              divisions: 99,
+              onChanged: (value) {
+                setState(() {
+                  _maxSpeed = value;
+                  _minSpeed = math.min(_minSpeed, _maxSpeed);
+                });
+              },
+            ),
+            Text('${_maxSpeed.toInt()}'),
+          ],
+        ),
+        SizedBox(height: 10.0),
+        Row(
+          children: <Widget>[
+            RaisedButton(
+              child: Text('Next'),
+              onPressed: () {
+                setState(() {
+                  switch (_behaviour.runtimeType) {
+                    case RainBehaviour:
+                      _behaviour = const RandomMovementBehavior();
+                      break;
+                    case RandomMovementBehavior:
+                      _behaviour = const RainBehaviour();
+                  }
+                });
+              },
+            ),
+            SizedBox(width: 10.0),
+            Text('Current: ${_behaviour.runtimeType.toString()}'),
+          ],
+        ),
+        SizedBox(height: 10.0),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            _buildParticleTypeSelector(ParticleType.Shape),
+            _buildParticleTypeSelector(ParticleType.Image),
+          ],
+        ),
+        _buildTypeSettings(),
+      ],
+    );
+  }
+
+  Widget _buildTypeSettings() {
+    switch (_particleType) {
+      case ParticleType.Image:
+        return Column(
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                _buildImageSelector(Image.asset('assets/images/star_stroke.png')),
+                _buildImageSelector(Image.asset('assets/images/icy_logo.png')),
+                RaisedButton(
+                  child: Text('Keyboard'),
+                  onPressed: () {
+                    Clipboard.getData('text/plain').then((ClipboardData value) {
+                      if (value == null)
+                        return;
+                      setState(() {
+                        _image = Image.network(value.text);
+                      });
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        );
+      case ParticleType.Shape:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Checkbox(
+                  onChanged: (value) => setState(() => _paintFill = value),
+                  value: _paintFill,
+                ),
+                Text('Fill Shape')
+              ],
+            ),
+            Row(
+             children: <Widget>[
+               Text('Stroke Width:'),
+               Slider(
+                 value: _strokeWidth,
+                 min: 1.0,
+                 max: 50.0,
+                 divisions: 49,
+                 onChanged: (value) => setState(() => _strokeWidth = value),
+               ),
+               Text('${_strokeWidth.toInt()}'),
+             ],
+            ),
+          ],
+        );
+    }
+    return Container();
+  }
+
+  Widget _buildImageSelector(Image image) {
+    return InkWell(
+      child: SizedBox(
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              width: 1.0,
+              color: _image.image == image.image ? Colors.amber : Colors.transparent,
+            ),
+          ),
+          child: image,
+        ),
+        width: 40.0,
+        height: 40.0,
+      ),
+      onTap: () => setState(() => _image = image),
+    );
+  }
+}
+
+enum ParticleType {
+  Shape,
+  Image,
+}
+
+class RainBehaviour extends ParticleBehaviour {
+  static math.Random random = math.Random();
+
+  const RainBehaviour();
+
+  @override
+  void initParticle(Particle particle, Size size, ParticleOptions options) {
+    particle.cx = random.nextDouble() * size.width;
+    if (particle.cy == 0.0)
+      particle.cy = random.nextDouble() * size.height;
+    else
+      particle.cy = random.nextDouble() * size.width * 0.2;
+
+    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
+
+    double dirX = (random.nextDouble() - 0.5);
+    double dirY = random.nextDouble() * 0.5 + 0.5;
+    double magSq = dirX * dirX + dirY * dirY;
+    double mag = magSq <= 0 ? 1 : math.sqrt(magSq);
+
+    particle.dx = dirX / mag * speed;
+    particle.dy = dirY / mag * speed;
+
+    particle.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
+    particle.alpha = options.spawnOpacity;
+    particle.maxAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
+  }
+
+  @override
+  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles) {
+    // TODO: implement onParticleBehaviorUpdate
+  }
+
+  @override
+  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles) {
+    // TODO: implement onParticleOptionsUpdate
   }
 }

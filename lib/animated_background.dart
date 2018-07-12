@@ -13,21 +13,25 @@ class AnimatedBackground extends SingleChildRenderObjectWidget {
   final TickerProvider vsync;
   final ParticleOptions particleOptions;
   final Paint particlePaint;
+  final ParticleBehaviour particleBehaviour;
 
   AnimatedBackground({
     @required Widget child,
     @required this.vsync,
     this.particleOptions = const ParticleOptions(),
     this.particlePaint,
+    this.particleBehaviour = const RandomMovementBehavior(),
   })  : assert(child != null),
         assert(vsync != null),
         assert(particleOptions != null),
+        assert(particleBehaviour != null),
         super(child: child);
   @override
   createRenderObject(BuildContext context) => _PainterRenderObject(
         vsync: vsync,
         particleOptions: particleOptions,
         particlePaint: particlePaint,
+        particleBehaviour: particleBehaviour,
       );
 
   @override
@@ -37,6 +41,8 @@ class AnimatedBackground extends SingleChildRenderObjectWidget {
       painterRenderObject.particleOptions = particleOptions;
     if (painterRenderObject.particlePaint != particlePaint)
       painterRenderObject.particlePaint = particlePaint;
+    if (painterRenderObject.particleBehaviour != particleBehaviour)
+      painterRenderObject.particleBehaviour = particleBehaviour;
   }
 }
 
@@ -88,32 +94,34 @@ class ParticleOptions {
         assert(spawnMaxSpeed >= spawnMinSpeed),
         assert(spawnMinSpeed >= 0.0),
         assert(spawnMaxSpeed >= 0.0),
-        assert(particleCount > 0);
+        assert(particleCount >= 0);
 }
 
 class _PainterRenderObject extends RenderProxyBox {
-  List<_Particle> _particles;
-  int lastTimeMs = 0;
+  List<Particle> _particles;
 
+  int lastTimeMs = 0;
   Ticker _ticker;
 
   ParticleOptions _particleOptions;
-  ParticleOptions get particleOptions => _particleOptions;
+  Paint _particlePaint;
+  ParticleBehaviour _particleBehaviour;
 
   Rect _particleImageSrc;
   ui.Image _particleImage;
   Function _pendingConversion;
 
+  ParticleOptions get particleOptions => _particleOptions;
   set particleOptions(value) {
     assert(value != null);
     if (value == _particleOptions)
       return;
-    ParticleOptions oldOptions = value;
+    ParticleOptions oldOptions = _particleOptions;
     _particleOptions = value;
 
     if (_particleOptions.image == null)
       _particleImage = null;
-    else if (oldOptions.image != _particleOptions.image)
+    else if (_particleImage == null || oldOptions.image != _particleOptions.image)
       _convertParticleImage(_particleOptions.image);
 
     if (_particles == null)
@@ -123,25 +131,19 @@ class _PainterRenderObject extends RenderProxyBox {
     else if (_particles.length < _particleOptions.particleCount)
       _particles.addAll(_generateParticles(_particleOptions.particleCount - _particles.length));
 
-
-    double minSpeedSqr = particleOptions.spawnMinSpeed * particleOptions.spawnMinSpeed;
-    double maxSpeedSqr = particleOptions.spawnMaxSpeed * particleOptions.spawnMaxSpeed;
-    for (_Particle p in _particles) {
-      // speed assignment is better done this way, to prevent calculation of square roots if not needed
-      double speedSqr = p.speedSqr;
-      if (speedSqr > maxSpeedSqr)
-        p.speed = particleOptions.spawnMaxSpeed;
-      else if (speedSqr < minSpeedSqr)
-        p.speed = particleOptions.spawnMinSpeed;
-
-      // TODO: handle opacity change
-
-      if (p.radius < particleOptions.spawnMinRadius || p.radius > particleOptions.spawnMaxRadius)
-        p.newRadius(particleOptions);
-    }
+    _particleBehaviour.onParticleOptionsUpdate(_particleOptions, oldOptions, size, _particles);
   }
 
-  Paint _particlePaint;
+  ParticleBehaviour get particleBehaviour => _particleBehaviour;
+  set particleBehaviour(value) {
+    assert(value != null);
+    ParticleBehaviour oldBehaviour = _particleBehaviour;
+    _particleBehaviour = value;
+
+    _particleBehaviour.onParticleBehaviorUpdate(oldBehaviour, size, _particleOptions, _particles);
+
+  }
+
   Paint get particlePaint => _particlePaint;
   set particlePaint(value) {
     if (value == null) {
@@ -161,9 +163,12 @@ class _PainterRenderObject extends RenderProxyBox {
     @required TickerProvider vsync,
     @required ParticleOptions particleOptions,
     @required Paint particlePaint,
+    @required ParticleBehaviour particleBehaviour,
   })  : assert(vsync != null),
         assert(particleOptions != null),
-        _particleOptions = particleOptions {
+        assert(particleBehaviour != null),
+        _particleOptions = particleOptions,
+        _particleBehaviour = particleBehaviour {
     this.particlePaint = particlePaint;
     _ticker = vsync.createTicker(_tick);
     _ticker.start();
@@ -177,25 +182,22 @@ class _PainterRenderObject extends RenderProxyBox {
     double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
     lastTimeMs = elapsed.inMilliseconds;
 
-    for (_Particle particle in _particles) {
+    for (Particle particle in _particles) {
       if (!size.contains(Offset(particle.cx, particle.cy))) {
-        particle.initParticle(size, particleOptions);
+        _particleBehaviour.initParticle(particle, size, particleOptions);
         continue;
       }
 
-      particle.cx += particle.dx * delta;
-      particle.cy += particle.dy * delta;
-      if (particleOptions.opacityChangeRate > 0 && particle.alpha < particle.maxAlpha ||
-          particleOptions.opacityChangeRate < 0 && particle.alpha > 0) {
-        particle.alpha = math.min(math.max(particle.alpha + delta * particleOptions.opacityChangeRate, 0.0), particle.maxAlpha);
-      }
+      _particleBehaviour.updateParticle(particle, size, particleOptions, delta, elapsed);
     }
     markNeedsPaint();
   }
 
   _generateParticles(int numParticles) {
     return List.generate(numParticles, (i) => i).map((i) {
-      return _Particle()..initParticle(size, particleOptions);
+      Particle p = Particle();
+      _particleBehaviour.initParticle(p, size, particleOptions);
+      return p;
     }).toList();
   }
 
@@ -208,7 +210,7 @@ class _PainterRenderObject extends RenderProxyBox {
     Canvas canvas = context.canvas;
     canvas.translate(offset.dx, offset.dy);
 
-    for (_Particle particle in _particles) {
+    for (Particle particle in _particles) {
       if (particle.alpha == 0.0)
         continue;
       _particlePaint.color = particleOptions.baseColor.withOpacity(particle.alpha);
@@ -238,42 +240,16 @@ class _PainterRenderObject extends RenderProxyBox {
   }
 }
 
-class _Particle {
-  static math.Random random = math.Random();
-  double cx;
-  double cy;
-  double dx;
-  double dy;
-  double radius;
-  double alpha;
-  double maxAlpha;
+class Particle {
+  double cx = 0.0;
+  double cy = 0.0;
+  double dx = 0.0;
+  double dy = 1.0;
+  double radius = 0.0;
+  double alpha = 0.0;
+  double maxAlpha = 0.0;
 
-  _Particle();
-  initParticle(Size size, ParticleOptions options) {
-    cx = random.nextDouble() * size.width;
-    cy = random.nextDouble() * size.height;
-    newRadius(options);
-
-    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
-    newDirection(speed);
-
-    alpha = options.spawnOpacity;
-    maxAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
-  }
-
-  newRadius(ParticleOptions options) {
-    radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
-  }
-
-  newDirection(double speed) {
-    double dirX = random.nextDouble() - 0.5;
-    double dirY = random.nextDouble() - 0.5;
-    double magSq = dirX * dirX + dirY * dirY;
-    double mag = magSq <= 0 ? 1 : math.sqrt(magSq);
-
-    dx = dirX / mag * speed;
-    dy = dirY / mag * speed;
-  }
+  Particle();
 
   double get speedSqr => dx * dx + dy * dy;
   set speedSqr (double value) {
@@ -283,11 +259,93 @@ class _Particle {
   double get speed => math.sqrt(speedSqr);
   set speed (double value) {
     double mag = speed;
-    if (mag == 0) {
-      newDirection(value);
+    if (mag == 0) { // TODO: maybe find a better solution for this case
+      dx = 0.0;
+      dy = value;
     } else {
       dx = dx / mag * value;
       dy = dy / mag * value;
     }
+  }
+}
+
+abstract class ParticleBehaviour {
+  const ParticleBehaviour();
+
+  void initParticle(Particle particle, Size size, ParticleOptions options);
+  void updateParticle(Particle particle, Size size, ParticleOptions options, double delta, Duration elapsed) {
+    particle.cx += particle.dx * delta;
+    particle.cy += particle.dy * delta;
+    if (options.opacityChangeRate > 0 && particle.alpha < particle.maxAlpha ||
+        options.opacityChangeRate < 0 && particle.alpha > particle.maxAlpha) {
+      particle.alpha = particle.alpha + delta * options.opacityChangeRate;
+
+      if (options.opacityChangeRate > 0 && particle.alpha > particle.maxAlpha ||
+          options.opacityChangeRate < 0 && particle.alpha < particle.maxAlpha)
+        particle.alpha = particle.maxAlpha;
+    }
+  }
+
+  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles);
+  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles);
+}
+
+class RandomMovementBehavior extends ParticleBehaviour {
+  static math.Random random = math.Random();
+
+  const RandomMovementBehavior();
+
+  @override
+  void initParticle(Particle p, Size size, ParticleOptions options) {
+    p.cx = random.nextDouble() * size.width;
+    p.cy = random.nextDouble() * size.height;
+    _newRadius(p, options);
+
+    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
+    _newDirection(p, options, speed);
+
+    p.alpha = options.spawnOpacity;
+    p.maxAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
+  }
+
+  void _newRadius(Particle p, ParticleOptions options) {
+    p.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
+  }
+
+  void _newDirection(Particle p, ParticleOptions options, double speed) {
+    double dirX = random.nextDouble() - 0.5;
+    double dirY = random.nextDouble() - 0.5;
+    double magSq = dirX * dirX + dirY * dirY;
+    double mag = magSq <= 0 ? 1 : math.sqrt(magSq);
+
+    p.dx = dirX / mag * speed;
+    p.dy = dirY / mag * speed;
+  }
+
+  @override
+  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles) {
+    double minSpeedSqr = options.spawnMinSpeed * options.spawnMinSpeed;
+    double maxSpeedSqr = options.spawnMaxSpeed * options.spawnMaxSpeed;
+    for (Particle p in particles) {
+      // speed assignment is better done this way, to prevent calculation of square roots if not needed
+      double speedSqr = p.speedSqr;
+      if (speedSqr > maxSpeedSqr)
+        p.speed = options.spawnMaxSpeed;
+      else if (speedSqr < minSpeedSqr)
+        p.speed = options.spawnMinSpeed;
+
+      // TODO: handle opacity change
+
+      if (p.radius < options.spawnMinRadius || p.radius > options.spawnMaxRadius)
+        _newRadius(p, options);
+    }
+  }
+
+  @override
+  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles) {
+    if (oldBehaviour is RandomMovementBehavior)
+      return;
+    for (Particle p in particles)
+      initParticle(p, size, options);
   }
 }
