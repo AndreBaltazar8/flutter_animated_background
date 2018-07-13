@@ -82,16 +82,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ..strokeWidth = _strokeWidth,
         particleBehaviour: _behaviour,
         vsync: this,
-        child: Stack(
-          children: <Widget>[
-            Container(), // combination of stack and container fills the screen
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _showSettings ? _buildSettings() : Container(),
-              ),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _showSettings ? _buildSettings() : Container(),
+          ),
         ),
       ),
     );
@@ -433,5 +428,30 @@ class RainBehaviour extends ParticleBehaviour {
   @override
   void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles) {
     // TODO: implement onParticleOptionsUpdate
+  }
+
+  @override
+  Widget builder(BuildContext context, BoxConstraints constraints, Widget child, List<Particle> particles, ParticleOptions options) {
+    return GestureDetector(
+      onTapDown: (details) {
+        RenderBox renderBox = context.findRenderObject() as RenderBox;
+        var offset = renderBox.globalToLocal(details.globalPosition);
+        particles.forEach((particle) {
+          var delta = (Offset(particle.cx, particle.cy) - offset);
+          if (delta.distanceSquared < 70 * 70) {
+            var speed = particle.speed;
+            var mag = delta.distance;
+            speed *= (70 - mag) / 70.0 * 2.0 + 1;
+            speed = math.min(options.spawnMaxSpeed, speed);
+            particle.dx = delta.dx / mag * speed;
+            particle.dy = delta.dy / mag * speed;
+          }
+        });
+      },
+      child: ConstrainedBox( // necessary to force gesture detector to cover screen
+        constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
+        child: super.builder(context, constraints, child, particles, options),
+      ),
+    );
   }
 }

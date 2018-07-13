@@ -9,14 +9,16 @@ import 'dart:ui' as ui;
 
 import 'image_helper.dart';
 
-class AnimatedBackground extends SingleChildRenderObjectWidget {
+class AnimatedBackground extends RenderObjectWidget {
+  final Widget child;
   final TickerProvider vsync;
   final ParticleOptions particleOptions;
   final Paint particlePaint;
   final ParticleBehaviour particleBehaviour;
 
   AnimatedBackground({
-    @required Widget child,
+    Key key,
+    @required this.child,
     @required this.vsync,
     this.particleOptions = const ParticleOptions(),
     this.particlePaint,
@@ -25,7 +27,7 @@ class AnimatedBackground extends SingleChildRenderObjectWidget {
         assert(vsync != null),
         assert(particleOptions != null),
         assert(particleBehaviour != null),
-        super(child: child);
+        super(key: key);
   @override
   createRenderObject(BuildContext context) => _PainterRenderObject(
         vsync: vsync,
@@ -35,14 +37,128 @@ class AnimatedBackground extends SingleChildRenderObjectWidget {
       );
 
   @override
-  void updateRenderObject(BuildContext context, RenderObject renderObject) {
-    _PainterRenderObject painterRenderObject = renderObject as _PainterRenderObject;
-    if (painterRenderObject.particleOptions != particleOptions)
-      painterRenderObject.particleOptions = particleOptions;
-    if (painterRenderObject.particlePaint != particlePaint)
-      painterRenderObject.particlePaint = particlePaint;
-    if (painterRenderObject.particleBehaviour != particleBehaviour)
-      painterRenderObject.particleBehaviour = particleBehaviour;
+  void updateRenderObject(BuildContext context, _PainterRenderObject renderObject) {
+    renderObject
+      ..particleOptions = particleOptions
+      ..particleBehaviour = particleBehaviour
+      ..particlePaint = particlePaint;
+  }
+
+  @override
+  _AnimatedBackgroundElement createElement() => _AnimatedBackgroundElement(this);
+
+  Widget builder(BuildContext context, BoxConstraints constraints, List<Particle> particles, ParticleOptions options) {
+    return particleBehaviour.builder(context, constraints, child, particles, options);
+  }
+}
+
+class _AnimatedBackgroundElement extends RenderObjectElement {
+  _AnimatedBackgroundElement(AnimatedBackground widget) : super(widget);
+
+  @override
+  AnimatedBackground get widget => super.widget;
+
+  @override
+  _PainterRenderObject get renderObject => super.renderObject;
+
+  Element _child;
+
+  @override
+  void forgetChild(Element child) {
+    assert(child == _child);
+    _child = null;
+  }
+
+  @override
+  void insertChildRenderObject(RenderObject child, slot) {
+    final RenderObjectWithChildMixin<RenderObject> renderObject = this.renderObject;
+    assert(slot == null);
+    assert(renderObject.debugValidateChild(child));
+    renderObject.child = child;
+    assert(renderObject == this.renderObject);
+  }
+
+  @override
+  void moveChildRenderObject(RenderObject child, slot) {
+    assert(false);
+  }
+
+  @override
+  void removeChildRenderObject(RenderObject child) {
+    final _PainterRenderObject renderObject = this.renderObject;
+    assert(renderObject.child == child);
+    renderObject.child = null;
+    assert(renderObject == this.renderObject);
+  }
+
+  @override
+  void visitChildren(ElementVisitor visitor) {
+    if (_child != null)
+      visitor(_child);
+  }
+
+  @override
+  void mount(Element parent, newSlot) {
+    super.mount(parent, newSlot);
+    renderObject.callback = _layoutCallback;
+  }
+
+  @override
+  void update(AnimatedBackground newWidget) {
+    assert(widget != newWidget);
+    super.update(newWidget);
+    assert(widget == newWidget);
+    renderObject.callback = _layoutCallback;
+    renderObject.markNeedsLayout();
+  }
+
+  @override
+  void performRebuild() {
+    renderObject.markNeedsLayout();
+    super.performRebuild();
+  }
+
+  @override
+  void unmount() {
+    renderObject.callback = null;
+    super.unmount();
+  }
+
+  void _layoutCallback(BoxConstraints constraints) {
+    owner.buildScope(this, () {
+      Widget built;
+      try {
+        built = widget.builder(this, constraints, renderObject._particles, renderObject._particleOptions);
+        debugWidgetBuilderValue(widget, built);
+      } catch (e, stack) {
+        built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
+      }
+
+      try {
+        _child = updateChild(_child, built, null);
+        assert(_child != null);
+      } catch (e, stack) {
+        built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
+        _child = updateChild(null, built, slot);
+      }
+    });
+  }
+
+  FlutterErrorDetails _debugReportException(
+      String context,
+      exception,
+      StackTrace stack,
+      ) {
+
+    final FlutterErrorDetails details = FlutterErrorDetails(
+      exception: exception,
+      stack: stack,
+      library: 'animated background library',
+      context: context,
+    );
+
+    FlutterError.reportError(details);
+    return details;
   }
 }
 
@@ -159,6 +275,15 @@ class _PainterRenderObject extends RenderProxyBox {
       _particlePaint.strokeWidth = 1.0;
   }
 
+  LayoutCallback<BoxConstraints> get callback => _callback;
+  LayoutCallback<BoxConstraints> _callback;
+  set callback(LayoutCallback<BoxConstraints> value) {
+    if (value == _callback)
+      return;
+    _callback = value;
+    markNeedsLayout();
+  }
+
   _PainterRenderObject({
     @required TickerProvider vsync,
     @required ParticleOptions particleOptions,
@@ -199,6 +324,15 @@ class _PainterRenderObject extends RenderProxyBox {
       _particleBehaviour.initParticle(p, size, particleOptions);
       return p;
     }).toList();
+  }
+
+  @override
+  void performLayout() {
+    assert(callback != null);
+    invokeLayoutCallback(callback);
+    if (child != null)
+      child.layout(constraints, parentUsesSize: true);
+    size = constraints.biggest;
   }
 
   @override
@@ -248,6 +382,7 @@ class Particle {
   double radius = 0.0;
   double alpha = 0.0;
   double maxAlpha = 0.0;
+  dynamic data;
 
   Particle();
 
@@ -288,6 +423,10 @@ abstract class ParticleBehaviour {
 
   void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles);
   void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles);
+
+  Widget builder(BuildContext context, BoxConstraints constraints, Widget child, List<Particle> particles, ParticleOptions options) {
+    return child;
+  }
 }
 
 class RandomMovementBehavior extends ParticleBehaviour {
