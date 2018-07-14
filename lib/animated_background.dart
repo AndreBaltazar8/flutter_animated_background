@@ -3,51 +3,41 @@ library animated_background;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'dart:ui' as ui;
 
-import 'image_helper.dart';
-import 'particles.dart';
 export 'particles.dart';
+export 'rectangles.dart';
 
 class AnimatedBackground extends RenderObjectWidget {
   final Widget child;
   final TickerProvider vsync;
-  final ParticleOptions particleOptions;
-  final Paint particlePaint;
-  final ParticleBehaviour particleBehaviour;
+  final Behaviour behaviour;
 
   AnimatedBackground({
     Key key,
     @required this.child,
     @required this.vsync,
-    this.particleOptions = const ParticleOptions(),
-    this.particlePaint,
-    this.particleBehaviour,
+    @required this.behaviour,
   })  : assert(child != null),
         assert(vsync != null),
-        assert(particleOptions != null),
+        assert(behaviour != null),
         super(key: key);
   @override
   createRenderObject(BuildContext context) => RenderAnimatedBackground(
-        vsync: vsync,
-        particleOptions: particleOptions,
-        particlePaint: particlePaint,
-        particleBehaviour: particleBehaviour ?? RandomMovementBehavior(),
-      );
+      vsync: vsync,
+      behaviour: behaviour,
+    );
 
   @override
   void updateRenderObject(BuildContext context, RenderAnimatedBackground renderObject) {
     renderObject
-      ..particleOptions = particleOptions
-      ..particleBehaviour = particleBehaviour
-      ..particlePaint = particlePaint;
+      ..behaviour = behaviour;
   }
 
   @override
   _AnimatedBackgroundElement createElement() => _AnimatedBackgroundElement(this);
 
   Widget builder(BuildContext context, BoxConstraints constraints) {
-    return particleBehaviour.builder(context, constraints, child);
+    return behaviour.builder(context, constraints, child);
   }
 }
 
@@ -165,53 +155,15 @@ class RenderAnimatedBackground extends RenderProxyBox {
   int lastTimeMs = 0;
   Ticker _ticker;
 
-  ParticleOptions _particleOptions;
-  Paint _particlePaint;
-  ParticleBehaviour _particleBehaviour;
-
-  Rect _particleImageSrc;
-  ui.Image _particleImage;
-  Function _pendingConversion;
-
-  ParticleOptions get particleOptions => _particleOptions;
-  set particleOptions(value) {
+  Behaviour _behaviour;
+  Behaviour get behaviour => _behaviour;
+  set behaviour(value) {
     assert(value != null);
-    if (value == _particleOptions)
-      return;
-    ParticleOptions oldOptions = _particleOptions;
-    _particleOptions = value;
+    Behaviour oldBehaviour = _behaviour;
+    _behaviour = value;
 
-    if (_particleOptions.image == null)
-      _particleImage = null;
-    else if (_particleImage == null || oldOptions.image != _particleOptions.image)
-      _convertParticleImage(_particleOptions.image);
-
-    _particleBehaviour.onParticleOptionsUpdate(oldOptions);
-  }
-
-  ParticleBehaviour get particleBehaviour => _particleBehaviour;
-  set particleBehaviour(value) {
-    assert(value != null);
-    ParticleBehaviour oldBehaviour = _particleBehaviour;
-    _particleBehaviour = value;
-
-    _particleBehaviour.renderObject = this;
-    _particleBehaviour.onParticleBehaviorUpdate(oldBehaviour);
-  }
-
-  Paint get particlePaint => _particlePaint;
-  set particlePaint(value) {
-    if (value == null) {
-      _particlePaint = Paint()
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.fill
-        ..strokeWidth = 1.0;
-    } else {
-      _particlePaint = value;
-    }
-
-    if (_particlePaint.strokeWidth <= 0)
-      _particlePaint.strokeWidth = 1.0;
+    _behaviour.renderObject = this;
+    _behaviour.initFrom(oldBehaviour);
   }
 
   LayoutCallback<BoxConstraints> get callback => _callback;
@@ -225,29 +177,21 @@ class RenderAnimatedBackground extends RenderProxyBox {
 
   RenderAnimatedBackground({
     @required TickerProvider vsync,
-    @required ParticleOptions particleOptions,
-    @required Paint particlePaint,
-    @required ParticleBehaviour particleBehaviour,
+    @required Behaviour behaviour,
   })  : assert(vsync != null),
-        assert(particleOptions != null),
-        assert(particleBehaviour != null),
-        _particleOptions = particleOptions,
-        _particleBehaviour = particleBehaviour {
-    this.particlePaint = particlePaint;
-    _particleBehaviour.renderObject = this;
+        assert(behaviour != null),
+        _behaviour = behaviour {
+    _behaviour.renderObject = this;
 
     _ticker = vsync.createTicker(_tick);
     _ticker.start();
-
-    if (_particleOptions.image != null)
-      _convertParticleImage(_particleOptions.image);
   }
 
   void _tick(Duration elapsed) {
     double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
     lastTimeMs = elapsed.inMilliseconds;
 
-    if (_particleBehaviour.tick(delta, elapsed))
+    if (_behaviour.tick(delta, elapsed))
       markNeedsPaint();
   }
 
@@ -262,36 +206,40 @@ class RenderAnimatedBackground extends RenderProxyBox {
 
   @override
   paint(PaintingContext context, Offset offset) {
-    if (particleBehaviour.particles == null)
-      particleBehaviour.initBehaviour();
+    if (!behaviour.isInitialized)
+      behaviour.init();
 
     Canvas canvas = context.canvas;
     canvas.translate(offset.dx, offset.dy);
-
-    for (Particle particle in particleBehaviour.particles) {
-      if (particle.alpha == 0.0)
-        continue;
-      _particlePaint.color = particleOptions.baseColor.withOpacity(particle.alpha);
-
-      if (_particleImage != null) {
-        Rect dst = Rect.fromLTRB(particle.cx - particle.radius, particle.cy - particle.radius, particle.cx + particle.radius, particle.cy + particle.radius);
-        canvas.drawImageRect(_particleImage, _particleImageSrc, dst, _particlePaint);
-      } else
-        canvas.drawCircle(Offset(particle.cx, particle.cy), particle.radius, _particlePaint);
-    }
+    behaviour.paint(context, offset);
     canvas.translate(-offset.dx, -offset.dy);
 
     super.paint(context, offset);
   }
+}
 
-  void _convertParticleImage(Image image) async {
-    if (_pendingConversion != null)
-      _pendingConversion();
-    _pendingConversion = convertImage(image, (ui.Image outImage) {
-      _pendingConversion = null;
-      if (outImage != null)
-        _particleImageSrc = Rect.fromLTRB(0.0, 0.0, outImage.width.toDouble(), outImage.height.toDouble());
-      _particleImage = outImage;
-    });
+abstract class Behaviour {
+  RenderAnimatedBackground renderObject;
+  @protected
+  Size get size => renderObject?.size;
+
+  bool get isInitialized;
+
+  @protected
+  void init();
+
+  @protected
+  void initFrom(Behaviour oldBehaviour);
+
+  @protected
+  bool tick(double delta, Duration elapsed);
+
+  @protected
+  void paint(PaintingContext context, Offset offset);
+
+  @protected
+  @mustCallSuper
+  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+    return child;
   }
 }

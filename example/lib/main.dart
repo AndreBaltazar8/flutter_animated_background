@@ -30,21 +30,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  int _counter = 40;
-  double _spawnOpacity = 0.0;
-  double _opacityChangeRate = 0.25;
-  double _minOpacity = 0.1;
-  double _maxOpacity = 0.4;
-  double _minRadius = 7.0;
-  double _maxRadius = 15.0;
-  double _minSpeed = 30.0;
-  double _maxSpeed = 70.0;
-  ParticleBehaviour _behaviour = RandomMovementBehavior();
-  bool _showSettings = false;
+  static const numBehaviours = 3;
+
   ParticleType _particleType = ParticleType.Image;
-  bool _paintFill = false;
-  double _strokeWidth = 1.0;
   Image _image = Image.asset('assets/images/star_stroke.png');
+
+  ParticleOptions particleOptions = ParticleOptions(
+    image: Image.asset('assets/images/star_stroke.png'),
+    baseColor: Colors.blue,
+    spawnOpacity: 0.0,
+    opacityChangeRate: 0.25,
+    minOpacity: 0.1,
+    maxOpacity: 0.4,
+    spawnMinSpeed: 30.0,
+    spawnMaxSpeed: 70.0,
+    spawnMinRadius: 7.0,
+    spawnMaxRadius: 15.0,
+    particleCount: 40,
+  );
+
+  var particlePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  int _behaviourIndex = 0;
+  Behaviour _behaviour;
+
+  bool _showSettings = false;
 
   @override
   Widget build(BuildContext context) {
@@ -64,23 +76,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ],
       ),
       body: AnimatedBackground(
-        particleOptions: ParticleOptions(
-          image: _particleType == ParticleType.Image ? _image : null,
-          baseColor: Colors.blue,
-          spawnOpacity: _spawnOpacity,
-          opacityChangeRate: _opacityChangeRate,
-          minOpacity: _minOpacity,
-          maxOpacity: _maxOpacity,
-          spawnMinSpeed: _minSpeed,
-          spawnMaxSpeed: _maxSpeed,
-          spawnMinRadius: _minRadius,
-          spawnMaxRadius: _maxRadius,
-          particleCount: _counter,
-        ),
-        particlePaint: Paint()
-          ..style = _paintFill ? PaintingStyle.fill : PaintingStyle.stroke
-          ..strokeWidth = _strokeWidth,
-        particleBehaviour: _behaviour,
+        behaviour: _behaviour = _buildBehaviour(),
         vsync: this,
         child: SingleChildScrollView(
           child: Padding(
@@ -95,8 +91,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void _onTypeChange(ParticleType type) {
     setState(() {
       _particleType = type;
-      if (_particleType == ParticleType.Image)
-        _counter = math.min(_counter, 100);
+      if (_particleType == ParticleType.Image) {
+        particleOptions = particleOptions.copyWith(
+          image: _image,
+          particleCount: math.min(particleOptions.particleCount, 100),
+        );
+      } else {
+        particleOptions = particleOptions.copyWith(
+          image: null,
+        );
+      }
     });
   }
 
@@ -123,190 +127,217 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Text('Count:'),
-            Slider(
-              value: _counter.toDouble(),
-              min: 0.0,
-              max: _particleType == ParticleType.Image ? 100.0 : 1000.0,
-              divisions: 100,
-              onChanged: (value) {
-                setState(() {
-                  _counter = value.floor();
-                });
-              },
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Spawn opacity:'),
-            Slider(
-              value: _spawnOpacity,
-              min: 0.0,
-              max: 1.0,
-              divisions: 10,
-              onChanged: (value) => setState(() => _spawnOpacity = value),
-            ),
-            Text('${_spawnOpacity.toStringAsFixed(1)}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Opacity rate:'),
-            Slider(
-              value: _opacityChangeRate,
-              min: -2.0,
-              max: 2.0,
-              divisions: 80,
-              onChanged: (value) => setState(() => _opacityChangeRate = value),
-            ),
-            Text('${_opacityChangeRate.toStringAsFixed(2)}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Min opacity:'),
-            Slider(
-              value: _minOpacity,
-              min: 0.0,
-              max: 1.0,
-              divisions: 20,
-              onChanged: (value) {
-                setState(() {
-                  _minOpacity = value;
-                  _maxOpacity = math.max(_maxOpacity, _minOpacity);
-                });
-              },
-            ),
-            Text('${_minOpacity.toStringAsFixed(2)}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Max opacity:'),
-            Slider(
-              value: _maxOpacity,
-              min: 0.0,
-              max: 1.0,
-              divisions: 20,
-              onChanged: (value) {
-                setState(() {
-                  _maxOpacity = value;
-                  _minOpacity = math.min(_minOpacity, _maxOpacity);
-                });
-              },
-            ),
-            Text('${_maxOpacity.toStringAsFixed(2)}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Min radius:'),
-            Slider(
-              value: _minRadius,
-              min: 1.0,
-              max: 100.0,
-              divisions: 99,
-              onChanged: (value) {
-                setState(() {
-                  _minRadius = value;
-                  _maxRadius = math.max(_maxRadius, _minRadius);
-                });
-              },
-            ),
-            Text('${_minRadius.toInt()}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Max radius:'),
-            Slider(
-              value: _maxRadius,
-              min: 1.0,
-              max: 100.0,
-              divisions: 99,
-              onChanged: (value) {
-                setState(() {
-                  _maxRadius = value;
-                  _minRadius = math.min(_minRadius, _maxRadius);
-                });
-              },
-            ),
-            Text('${_maxRadius.toInt()}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Min speed:'),
-            Slider(
-              value: _minSpeed,
-              min: 1.0,
-              max: 100.0,
-              divisions: 99,
-              onChanged: (value) {
-                setState(() {
-                  _minSpeed = value;
-                  _maxSpeed = math.max(_maxSpeed, _minSpeed);
-                });
-              },
-            ),
-            Text('${_minSpeed.toInt()}'),
-          ],
-        ),
-        Row(
-          children: <Widget>[
-            Text('Max speed:'),
-            Slider(
-              value: _maxSpeed,
-              min: 1.0,
-              max: 100.0,
-              divisions: 99,
-              onChanged: (value) {
-                setState(() {
-                  _maxSpeed = value;
-                  _minSpeed = math.min(_minSpeed, _maxSpeed);
-                });
-              },
-            ),
-            Text('${_maxSpeed.toInt()}'),
-          ],
-        ),
-        SizedBox(height: 10.0),
-        Row(
-          children: <Widget>[
             RaisedButton(
               child: Text('Next'),
               onPressed: () {
                 setState(() {
-                  switch (_behaviour.runtimeType) {
-                    case RainBehaviour:
-                      _behaviour = RandomMovementBehavior();
-                      break;
-                    case RandomMovementBehavior:
-                      _behaviour = RainBehaviour();
-                  }
+                  _behaviourIndex = (_behaviourIndex + 1) % numBehaviours;
                 });
               },
             ),
             SizedBox(width: 10.0),
-            Text('Current: ${_behaviour.runtimeType.toString()}'),
+            Text('Current: ${_behaviourIndex + 1} out of $numBehaviours'),
           ],
         ),
         SizedBox(height: 10.0),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildParticleTypeSelector(ParticleType.Shape),
-            _buildParticleTypeSelector(ParticleType.Image),
-          ],
-        ),
-        _buildTypeSettings(),
-      ],
+        Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
+        SizedBox(height: 10.0),
+      ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty()),
     );
+  }
+
+  List<Widget> _buildParticleSettings() {
+    return <Widget>[
+      Row(
+        children: <Widget>[
+          Text('Count:'),
+          Slider(
+            value: particleOptions.particleCount.toDouble(),
+            min: 0.0,
+            max: _particleType == ParticleType.Image ? 100.0 : 1000.0,
+            divisions: 100,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  particleCount: value.floor(),
+                );
+              });
+            },
+          ),
+          Text(
+            '${particleOptions.particleCount}',
+            style: Theme.of(context).textTheme.display1,
+          ),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Spawn opacity:'),
+          Slider(
+            value: particleOptions.spawnOpacity,
+            min: 0.0,
+            max: 1.0,
+            divisions: 10,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  spawnOpacity: value,
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.spawnOpacity.toStringAsFixed(1)}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Opacity rate:'),
+          Slider(
+            value: particleOptions.opacityChangeRate,
+            min: -2.0,
+            max: 2.0,
+            divisions: 80,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  opacityChangeRate: value,
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.opacityChangeRate.toStringAsFixed(2)}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Min opacity:'),
+          Slider(
+            value: particleOptions.minOpacity,
+            min: 0.0,
+            max: 1.0,
+            divisions: 20,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  minOpacity: value,
+                  maxOpacity: math.max(particleOptions.maxOpacity, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.minOpacity.toStringAsFixed(2)}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Max opacity:'),
+          Slider(
+            value: particleOptions.maxOpacity,
+            min: 0.0,
+            max: 1.0,
+            divisions: 20,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  maxOpacity: value,
+                  minOpacity: math.min(particleOptions.minOpacity, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.maxOpacity.toStringAsFixed(2)}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Min radius:'),
+          Slider(
+            value: particleOptions.spawnMinRadius,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  spawnMinRadius: value,
+                  spawnMaxRadius: math.max(particleOptions.spawnMaxRadius, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.spawnMinRadius.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Max radius:'),
+          Slider(
+            value: particleOptions.spawnMaxRadius,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  spawnMaxRadius: value,
+                  spawnMinRadius: math.min(particleOptions.spawnMinRadius, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.spawnMaxRadius.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Min speed:'),
+          Slider(
+            value: particleOptions.spawnMinSpeed,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  spawnMinSpeed: value,
+                  spawnMaxSpeed: math.max(particleOptions.spawnMaxSpeed, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.spawnMinSpeed.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Max speed:'),
+          Slider(
+            value: particleOptions.spawnMaxSpeed,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                particleOptions = particleOptions.copyWith(
+                  spawnMaxSpeed: value,
+                  spawnMinSpeed: math.min(particleOptions.spawnMinSpeed, value),
+                );
+              });
+            },
+          ),
+          Text('${particleOptions.spawnMaxSpeed.toInt()}'),
+        ],
+      ),
+      SizedBox(height: 10.0),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _buildParticleTypeSelector(ParticleType.Shape),
+          _buildParticleTypeSelector(ParticleType.Image),
+        ],
+      ),
+      _buildTypeSettings(),
+    ];
   }
 
   Widget _buildTypeSettings() {
@@ -319,13 +350,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 _buildImageSelector(Image.asset('assets/images/star_stroke.png')),
                 _buildImageSelector(Image.asset('assets/images/icy_logo.png')),
                 RaisedButton(
-                  child: Text('Keyboard'),
+                  child: Text('Clipboard'),
                   onPressed: () {
                     Clipboard.getData('text/plain').then((ClipboardData value) {
                       if (value == null)
                         return;
                       setState(() {
                         _image = Image.network(value.text);
+                        particleOptions = particleOptions.copyWith(
+                          image: _image,
+                        );
                       });
                     });
                   },
@@ -342,24 +376,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             Row(
               children: <Widget>[
                 Checkbox(
-                  onChanged: (value) => setState(() => _paintFill = value),
-                  value: _paintFill,
+                  onChanged: (value) => setState(() {
+                    particlePaint.style = value ? PaintingStyle.fill : PaintingStyle.stroke;
+                  }),
+                  value: particlePaint.style == PaintingStyle.fill,
                 ),
                 Text('Fill Shape')
               ],
             ),
             Row(
-             children: <Widget>[
-               Text('Stroke Width:'),
-               Slider(
-                 value: _strokeWidth,
-                 min: 1.0,
-                 max: 50.0,
-                 divisions: 49,
-                 onChanged: (value) => setState(() => _strokeWidth = value),
-               ),
-               Text('${_strokeWidth.toInt()}'),
-             ],
+              children: <Widget>[
+                Text('Stroke Width:'),
+                Slider(
+                  value: particlePaint.strokeWidth,
+                  min: 1.0,
+                  max: 50.0,
+                  divisions: 49,
+                  onChanged: (value) => setState(() => particlePaint.strokeWidth = value),
+                ),
+                Text('${particlePaint.strokeWidth.toInt()}'),
+              ],
             ),
           ],
         );
@@ -374,7 +410,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             border: Border.all(
               width: 1.0,
-              color: _image.image == image.image ? Colors.amber : Colors.transparent,
+              color: _image.image == image.image ? Colors.amber : Colors
+                  .transparent,
             ),
           ),
           child: image,
@@ -382,7 +419,35 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         width: 40.0,
         height: 40.0,
       ),
-      onTap: () => setState(() => _image = image),
+      onTap: () => setState(() {
+        _image = image;
+        particleOptions = particleOptions.copyWith(
+          image: _image,
+        );
+      }),
+    );
+  }
+
+  Behaviour _buildBehaviour() {
+    switch (_behaviourIndex) {
+      case 0:
+        return RandomParticleBehaviour(
+          options: particleOptions,
+          paint: particlePaint,
+        );
+      case 1:
+        return RandomParticleBehaviour(
+          options: particleOptions,
+          paint: particlePaint,
+          enabled: !_showSettings,
+        );
+      case 2:
+        return RectanglesBehaviour();
+    }
+
+    return RandomParticleBehaviour(
+      options: particleOptions,
+      paint: particlePaint,
     );
   }
 }
@@ -392,56 +457,62 @@ enum ParticleType {
   Image,
 }
 
-class RainBehaviour extends ParticleBehaviour {
+class RainParticleBehaviour extends RandomParticleBehaviour {
   static math.Random random = math.Random();
 
-  RainBehaviour();
+  bool enabled;
+
+  RainParticleBehaviour({
+    ParticleOptions options = const ParticleOptions(),
+    Paint paint,
+    this.enabled = true,
+  }) : assert(options != null),
+        super(options: options, paint: paint);
 
   @override
-  void initParticle(Particle particle) {
-    particle.cx = random.nextDouble() * size.width;
-    if (particle.cy == 0.0)
-      particle.cy = random.nextDouble() * size.height;
+  void initPosition(Particle p) {
+    p.cx = random.nextDouble() * size.width;
+    if (p.cy == 0.0)
+      p.cy = random.nextDouble() * size.height;
     else
-      particle.cy = random.nextDouble() * size.width * 0.2;
+      p.cy = random.nextDouble() * size.width * 0.2;
+  }
 
-    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
-
+  @override
+  void initDirection(Particle p, double speed) {
     double dirX = (random.nextDouble() - 0.5);
     double dirY = random.nextDouble() * 0.5 + 0.5;
     double magSq = dirX * dirX + dirY * dirY;
     double mag = magSq <= 0 ? 1 : math.sqrt(magSq);
 
-    particle.dx = dirX / mag * speed;
-    particle.dy = dirY / mag * speed;
-
-    particle.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
-    particle.alpha = options.spawnOpacity;
-    particle.targetAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
+    p.dx = dirX / mag * speed;
+    p.dy = dirY / mag * speed;
   }
 
   @override
   Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
-      onTapDown: (details) {
-        RenderBox renderBox = context.findRenderObject() as RenderBox;
-        var offset = renderBox.globalToLocal(details.globalPosition);
-        particles.forEach((particle) {
-          var delta = (Offset(particle.cx, particle.cy) - offset);
-          if (delta.distanceSquared < 70 * 70) {
-            var speed = particle.speed;
-            var mag = delta.distance;
-            speed *= (70 - mag) / 70.0 * 2.0 + 0.5;
-            speed = math.max(options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
-            particle.dx = delta.dx / mag * speed;
-            particle.dy = delta.dy / mag * speed;
-          }
-        });
-      },
+      onTapDown: enabled ? (details) => _tapDown(context, details) : null,
       child: ConstrainedBox( // necessary to force gesture detector to cover screen
         constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
         child: super.builder(context, constraints, child),
       ),
     );
+  }
+
+  void _tapDown(BuildContext context, TapDownDetails details) {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    var offset = renderBox.globalToLocal(details.globalPosition);
+    particles.forEach((particle) {
+      var delta = (Offset(particle.cx, particle.cy) - offset);
+      if (delta.distanceSquared < 70 * 70) {
+        var speed = particle.speed;
+        var mag = delta.distance;
+        speed *= (70 - mag) / 70.0 * 2.0 + 0.5;
+        speed = math.max(options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
+        particle.dx = delta.dx / mag * speed;
+        particle.dy = delta.dy / mag * speed;
+      }
+    });
   }
 }

@@ -1,43 +1,31 @@
-# Animated_background
+# Animated Backgrounds for Flutter
 
 [![pub package](https://img.shields.io/pub/v/animated_background.svg)](https://pub.dartlang.org/packages/animated_background)
 
 Animated backgrounds for Flutter.
 
-<p>
-    <img src="./screenshots/example_fill.gif?raw=true"/>
-    <img src="./screenshots/example_stroke.gif?raw=true"/>
-</p>
+![Screenshot](https://raw.githubusercontent.com/AndreBaltazar8/flutter_animated_background/master/screenshots/example_fill.gif)
+![Screenshot](https://raw.githubusercontent.com/AndreBaltazar8/flutter_animated_background/master/screenshots/example_star.gif)
+
+Note: These examples are laggy because they were recorded from the emulator. Other examples available in the [screenshots](https://github.com/AndreBaltazar8/flutter_animated_background/tree/master/screenshots) folder.
 
 ## How to use
-
 
 In your pubspec.yaml:
 ```yaml
 dependencies:
-  animated_background: ^0.0.2
+  animated_background: ^0.0.3
 ```
 
 ```dart
 import 'package:animated_background/animated_background.dart';
 ```
 
-Use in a Stateful Widget with mixin `TickerProviderStateMixin` or pass a ticker provider in `vsync`
+Use in a Stateful Widget with mixin `TickerProviderStateMixin` or pass a ticker provider in `vsync`.
 
 ```dart
 AnimatedBackground(
-  particleOptions: const ParticleOptions(
-    baseColor: Colors.blue,
-    minOpacity: 0.1,
-    maxOpacity: 0.4,
-    spawnMinSpeed: 30.0,
-    spawnMaxSpeed: 70.0,
-    spawnMinRadius: 2.0,
-    spawnMaxRadius: 5.0,
-  ),
-  particlePaint: Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.0,
+  behaviour: RandomParticleBehaviour(),
   vsync: this,
   child: Text('Hello'),
 );
