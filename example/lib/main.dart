@@ -39,7 +39,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   double _maxRadius = 15.0;
   double _minSpeed = 30.0;
   double _maxSpeed = 70.0;
-  ParticleBehaviour _behaviour = const RandomMovementBehavior();
+  ParticleBehaviour _behaviour = RandomMovementBehavior();
   bool _showSettings = false;
   ParticleType _particleType = ParticleType.Image;
   bool _paintFill = false;
@@ -284,10 +284,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 setState(() {
                   switch (_behaviour.runtimeType) {
                     case RainBehaviour:
-                      _behaviour = const RandomMovementBehavior();
+                      _behaviour = RandomMovementBehavior();
                       break;
                     case RandomMovementBehavior:
-                      _behaviour = const RainBehaviour();
+                      _behaviour = RainBehaviour();
                   }
                 });
               },
@@ -395,10 +395,10 @@ enum ParticleType {
 class RainBehaviour extends ParticleBehaviour {
   static math.Random random = math.Random();
 
-  const RainBehaviour();
+  RainBehaviour();
 
   @override
-  void initParticle(Particle particle, Size size, ParticleOptions options) {
+  void initParticle(Particle particle) {
     particle.cx = random.nextDouble() * size.width;
     if (particle.cy == 0.0)
       particle.cy = random.nextDouble() * size.height;
@@ -417,21 +417,11 @@ class RainBehaviour extends ParticleBehaviour {
 
     particle.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
     particle.alpha = options.spawnOpacity;
-    particle.maxAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
+    particle.targetAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
   }
 
   @override
-  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles) {
-    // TODO: implement onParticleBehaviorUpdate
-  }
-
-  @override
-  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles) {
-    // TODO: implement onParticleOptionsUpdate
-  }
-
-  @override
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child, List<Particle> particles, ParticleOptions options) {
+  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
       onTapDown: (details) {
         RenderBox renderBox = context.findRenderObject() as RenderBox;
@@ -441,8 +431,8 @@ class RainBehaviour extends ParticleBehaviour {
           if (delta.distanceSquared < 70 * 70) {
             var speed = particle.speed;
             var mag = delta.distance;
-            speed *= (70 - mag) / 70.0 * 2.0 + 1;
-            speed = math.min(options.spawnMaxSpeed, speed);
+            speed *= (70 - mag) / 70.0 * 2.0 + 0.5;
+            speed = math.max(options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
             particle.dx = delta.dx / mag * speed;
             particle.dy = delta.dy / mag * speed;
           }
@@ -450,7 +440,7 @@ class RainBehaviour extends ParticleBehaviour {
       },
       child: ConstrainedBox( // necessary to force gesture detector to cover screen
         constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
-        child: super.builder(context, constraints, child, particles, options),
+        child: super.builder(context, constraints, child),
       ),
     );
   }

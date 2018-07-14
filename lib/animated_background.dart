@@ -1,13 +1,13 @@
 library animated_background;
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'dart:ui' as ui;
 
 import 'image_helper.dart';
+import 'particles.dart';
+export 'particles.dart';
 
 class AnimatedBackground extends RenderObjectWidget {
   final Widget child;
@@ -22,22 +22,21 @@ class AnimatedBackground extends RenderObjectWidget {
     @required this.vsync,
     this.particleOptions = const ParticleOptions(),
     this.particlePaint,
-    this.particleBehaviour = const RandomMovementBehavior(),
+    this.particleBehaviour,
   })  : assert(child != null),
         assert(vsync != null),
         assert(particleOptions != null),
-        assert(particleBehaviour != null),
         super(key: key);
   @override
-  createRenderObject(BuildContext context) => _PainterRenderObject(
+  createRenderObject(BuildContext context) => RenderAnimatedBackground(
         vsync: vsync,
         particleOptions: particleOptions,
         particlePaint: particlePaint,
-        particleBehaviour: particleBehaviour,
+        particleBehaviour: particleBehaviour ?? RandomMovementBehavior(),
       );
 
   @override
-  void updateRenderObject(BuildContext context, _PainterRenderObject renderObject) {
+  void updateRenderObject(BuildContext context, RenderAnimatedBackground renderObject) {
     renderObject
       ..particleOptions = particleOptions
       ..particleBehaviour = particleBehaviour
@@ -47,8 +46,8 @@ class AnimatedBackground extends RenderObjectWidget {
   @override
   _AnimatedBackgroundElement createElement() => _AnimatedBackgroundElement(this);
 
-  Widget builder(BuildContext context, BoxConstraints constraints, List<Particle> particles, ParticleOptions options) {
-    return particleBehaviour.builder(context, constraints, child, particles, options);
+  Widget builder(BuildContext context, BoxConstraints constraints) {
+    return particleBehaviour.builder(context, constraints, child);
   }
 }
 
@@ -59,7 +58,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   AnimatedBackground get widget => super.widget;
 
   @override
-  _PainterRenderObject get renderObject => super.renderObject;
+  RenderAnimatedBackground get renderObject => super.renderObject;
 
   Element _child;
 
@@ -85,7 +84,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void removeChildRenderObject(RenderObject child) {
-    final _PainterRenderObject renderObject = this.renderObject;
+    final RenderAnimatedBackground renderObject = this.renderObject;
     assert(renderObject.child == child);
     renderObject.child = null;
     assert(renderObject == this.renderObject);
@@ -128,7 +127,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
     owner.buildScope(this, () {
       Widget built;
       try {
-        built = widget.builder(this, constraints, renderObject._particles, renderObject._particleOptions);
+        built = widget.builder(this, constraints);
         debugWidgetBuilderValue(widget, built);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
@@ -162,60 +161,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 }
 
-class ParticleOptions {
-  final Image image;
-  final Color baseColor;
-  final double spawnMinRadius;
-  final double spawnMaxRadius;
-  final double spawnMinSpeed;
-  final double spawnMaxSpeed;
-  final double spawnOpacity;
-  final double minOpacity;
-  final double maxOpacity;
-  final double opacityChangeRate;
-  final int particleCount;
-
-  const ParticleOptions({
-    this.image,
-    this.baseColor = Colors.black,
-    this.spawnMinRadius = 1.0,
-    this.spawnMaxRadius = 10.0,
-    this.spawnMinSpeed = 150.0,
-    this.spawnMaxSpeed = 300.0,
-    this.spawnOpacity = 0.0,
-    this.minOpacity = 0.1,
-    this.maxOpacity = 0.4,
-    this.opacityChangeRate = 0.25,
-    this.particleCount = 100,
-  })  : assert(baseColor != null),
-        assert(spawnMinRadius != null),
-        assert(spawnMaxRadius != null),
-        assert(spawnMinSpeed != null),
-        assert(spawnMaxSpeed != null),
-        assert(spawnOpacity != null),
-        assert(minOpacity != null),
-        assert(maxOpacity != null),
-        assert(opacityChangeRate != null),
-        assert(particleCount != null),
-        assert(spawnMaxRadius >= spawnMinRadius),
-        assert(spawnMinRadius >= 1.0),
-        assert(spawnMaxRadius >= 1.0),
-        assert(spawnOpacity >= 0.0),
-        assert(spawnOpacity <= 1.0),
-        assert(maxOpacity >= minOpacity),
-        assert(minOpacity >= 0.0),
-        assert(minOpacity <= 1.0),
-        assert(maxOpacity >= 0.0),
-        assert(maxOpacity <= 1.0),
-        assert(spawnMaxSpeed >= spawnMinSpeed),
-        assert(spawnMinSpeed >= 0.0),
-        assert(spawnMaxSpeed >= 0.0),
-        assert(particleCount >= 0);
-}
-
-class _PainterRenderObject extends RenderProxyBox {
-  List<Particle> _particles;
-
+class RenderAnimatedBackground extends RenderProxyBox {
   int lastTimeMs = 0;
   Ticker _ticker;
 
@@ -240,14 +186,7 @@ class _PainterRenderObject extends RenderProxyBox {
     else if (_particleImage == null || oldOptions.image != _particleOptions.image)
       _convertParticleImage(_particleOptions.image);
 
-    if (_particles == null)
-      return;
-    if (_particles.length > _particleOptions.particleCount)
-      _particles.removeRange(0, _particles.length - particleOptions.particleCount);
-    else if (_particles.length < _particleOptions.particleCount)
-      _particles.addAll(_generateParticles(_particleOptions.particleCount - _particles.length));
-
-    _particleBehaviour.onParticleOptionsUpdate(_particleOptions, oldOptions, size, _particles);
+    _particleBehaviour.onParticleOptionsUpdate(oldOptions);
   }
 
   ParticleBehaviour get particleBehaviour => _particleBehaviour;
@@ -256,8 +195,8 @@ class _PainterRenderObject extends RenderProxyBox {
     ParticleBehaviour oldBehaviour = _particleBehaviour;
     _particleBehaviour = value;
 
-    _particleBehaviour.onParticleBehaviorUpdate(oldBehaviour, size, _particleOptions, _particles);
-
+    _particleBehaviour.renderObject = this;
+    _particleBehaviour.onParticleBehaviorUpdate(oldBehaviour);
   }
 
   Paint get particlePaint => _particlePaint;
@@ -284,7 +223,7 @@ class _PainterRenderObject extends RenderProxyBox {
     markNeedsLayout();
   }
 
-  _PainterRenderObject({
+  RenderAnimatedBackground({
     @required TickerProvider vsync,
     @required ParticleOptions particleOptions,
     @required Paint particlePaint,
@@ -295,6 +234,8 @@ class _PainterRenderObject extends RenderProxyBox {
         _particleOptions = particleOptions,
         _particleBehaviour = particleBehaviour {
     this.particlePaint = particlePaint;
+    _particleBehaviour.renderObject = this;
+
     _ticker = vsync.createTicker(_tick);
     _ticker.start();
 
@@ -303,27 +244,11 @@ class _PainterRenderObject extends RenderProxyBox {
   }
 
   void _tick(Duration elapsed) {
-    if (_particles == null) return;
     double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
     lastTimeMs = elapsed.inMilliseconds;
 
-    for (Particle particle in _particles) {
-      if (!size.contains(Offset(particle.cx, particle.cy))) {
-        _particleBehaviour.initParticle(particle, size, particleOptions);
-        continue;
-      }
-
-      _particleBehaviour.updateParticle(particle, size, particleOptions, delta, elapsed);
-    }
-    markNeedsPaint();
-  }
-
-  _generateParticles(int numParticles) {
-    return List.generate(numParticles, (i) => i).map((i) {
-      Particle p = Particle();
-      _particleBehaviour.initParticle(p, size, particleOptions);
-      return p;
-    }).toList();
+    if (_particleBehaviour.tick(delta, elapsed))
+      markNeedsPaint();
   }
 
   @override
@@ -337,18 +262,16 @@ class _PainterRenderObject extends RenderProxyBox {
 
   @override
   paint(PaintingContext context, Offset offset) {
-    if (_particles == null) {
-      _particles = _generateParticles(particleOptions.particleCount);
-    }
+    if (particleBehaviour.particles == null)
+      particleBehaviour.initBehaviour();
 
     Canvas canvas = context.canvas;
     canvas.translate(offset.dx, offset.dy);
 
-    for (Particle particle in _particles) {
+    for (Particle particle in particleBehaviour.particles) {
       if (particle.alpha == 0.0)
         continue;
       _particlePaint.color = particleOptions.baseColor.withOpacity(particle.alpha);
-
 
       if (_particleImage != null) {
         Rect dst = Rect.fromLTRB(particle.cx - particle.radius, particle.cy - particle.radius, particle.cx + particle.radius, particle.cy + particle.radius);
@@ -369,122 +292,6 @@ class _PainterRenderObject extends RenderProxyBox {
       if (outImage != null)
         _particleImageSrc = Rect.fromLTRB(0.0, 0.0, outImage.width.toDouble(), outImage.height.toDouble());
       _particleImage = outImage;
-
     });
-  }
-}
-
-class Particle {
-  double cx = 0.0;
-  double cy = 0.0;
-  double dx = 0.0;
-  double dy = 1.0;
-  double radius = 0.0;
-  double alpha = 0.0;
-  double maxAlpha = 0.0;
-  dynamic data;
-
-  Particle();
-
-  double get speedSqr => dx * dx + dy * dy;
-  set speedSqr (double value) {
-    speed = math.sqrt(value.abs()) * value.sign;
-  }
-
-  double get speed => math.sqrt(speedSqr);
-  set speed (double value) {
-    double mag = speed;
-    if (mag == 0) { // TODO: maybe find a better solution for this case
-      dx = 0.0;
-      dy = value;
-    } else {
-      dx = dx / mag * value;
-      dy = dy / mag * value;
-    }
-  }
-}
-
-abstract class ParticleBehaviour {
-  const ParticleBehaviour();
-
-  void initParticle(Particle particle, Size size, ParticleOptions options);
-  void updateParticle(Particle particle, Size size, ParticleOptions options, double delta, Duration elapsed) {
-    particle.cx += particle.dx * delta;
-    particle.cy += particle.dy * delta;
-    if (options.opacityChangeRate > 0 && particle.alpha < particle.maxAlpha ||
-        options.opacityChangeRate < 0 && particle.alpha > particle.maxAlpha) {
-      particle.alpha = particle.alpha + delta * options.opacityChangeRate;
-
-      if (options.opacityChangeRate > 0 && particle.alpha > particle.maxAlpha ||
-          options.opacityChangeRate < 0 && particle.alpha < particle.maxAlpha)
-        particle.alpha = particle.maxAlpha;
-    }
-  }
-
-  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles);
-  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles);
-
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child, List<Particle> particles, ParticleOptions options) {
-    return child;
-  }
-}
-
-class RandomMovementBehavior extends ParticleBehaviour {
-  static math.Random random = math.Random();
-
-  const RandomMovementBehavior();
-
-  @override
-  void initParticle(Particle p, Size size, ParticleOptions options) {
-    p.cx = random.nextDouble() * size.width;
-    p.cy = random.nextDouble() * size.height;
-    _newRadius(p, options);
-
-    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
-    _newDirection(p, options, speed);
-
-    p.alpha = options.spawnOpacity;
-    p.maxAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
-  }
-
-  void _newRadius(Particle p, ParticleOptions options) {
-    p.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
-  }
-
-  void _newDirection(Particle p, ParticleOptions options, double speed) {
-    double dirX = random.nextDouble() - 0.5;
-    double dirY = random.nextDouble() - 0.5;
-    double magSq = dirX * dirX + dirY * dirY;
-    double mag = magSq <= 0 ? 1 : math.sqrt(magSq);
-
-    p.dx = dirX / mag * speed;
-    p.dy = dirY / mag * speed;
-  }
-
-  @override
-  void onParticleOptionsUpdate(ParticleOptions options, ParticleOptions oldOptions, Size size, List<Particle> particles) {
-    double minSpeedSqr = options.spawnMinSpeed * options.spawnMinSpeed;
-    double maxSpeedSqr = options.spawnMaxSpeed * options.spawnMaxSpeed;
-    for (Particle p in particles) {
-      // speed assignment is better done this way, to prevent calculation of square roots if not needed
-      double speedSqr = p.speedSqr;
-      if (speedSqr > maxSpeedSqr)
-        p.speed = options.spawnMaxSpeed;
-      else if (speedSqr < minSpeedSqr)
-        p.speed = options.spawnMinSpeed;
-
-      // TODO: handle opacity change
-
-      if (p.radius < options.spawnMinRadius || p.radius > options.spawnMaxRadius)
-        _newRadius(p, options);
-    }
-  }
-
-  @override
-  void onParticleBehaviorUpdate(ParticleBehaviour oldBehaviour, Size size, ParticleOptions options, List<Particle> particles) {
-    if (oldBehaviour is RandomMovementBehavior)
-      return;
-    for (Particle p in particles)
-      initParticle(p, size, options);
   }
 }
