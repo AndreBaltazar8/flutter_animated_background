@@ -6,14 +6,25 @@ import 'package:flutter/rendering.dart';
 
 import 'animated_background.dart';
 
+/// Holds the information of a rectangle used in a [RectanglesBehaviour].
 class Rectangle {
+  /// The current color of this rectangle
   HSVColor color;
+
+  /// The initial color of this rectangle
   HSVColor initialColor;
+
+  /// The color this rectangle will fade to.
   HSVColor fadeTo;
+
+  /// The interpolator between the [initialColor] and [fadeTo]
   double t = 0.0;
+
+  /// The rectangle size and position
   Rect rect;
 }
 
+/// Renders rectangles on an [AnimatedBackground]
 class RectanglesBehaviour extends Behaviour {
   static math.Random random = math.Random();
   List<Rectangle> _rectList;
@@ -21,8 +32,14 @@ class RectanglesBehaviour extends Behaviour {
   @override
   bool get isInitialized => _rectList != null;
 
-  HSVColor randomColor() {
-    return HSVColor.fromAHSV(1.0, ((random.nextDouble() * 360) % 36) * 10, random.nextDouble() * 0.2 + 0.1, random.nextDouble() * 0.1 + 0.9);
+  /// Generates random color to be used by the rectangles
+  static HSVColor randomColor() {
+    return HSVColor.fromAHSV(
+        1.0,
+        ((random.nextDouble() * 360) % 36) * 10,
+        random.nextDouble() * 0.2 + 0.1,
+        random.nextDouble() * 0.1 + 0.9
+    );
   }
 
   @override

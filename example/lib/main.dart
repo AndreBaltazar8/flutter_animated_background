@@ -436,7 +436,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           paint: particlePaint,
         );
       case 1:
-        return RandomParticleBehaviour(
+        return RainParticleBehaviour(
           options: particleOptions,
           paint: particlePaint,
           enabled: !_showSettings,
@@ -492,7 +492,8 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
   @override
   Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
-      onTapDown: enabled ? (details) => _tapDown(context, details) : null,
+      onPanUpdate: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
+      onTapDown: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
       child: ConstrainedBox( // necessary to force gesture detector to cover screen
         constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
         child: super.builder(context, constraints, child),
@@ -500,9 +501,9 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
     );
   }
 
-  void _tapDown(BuildContext context, TapDownDetails details) {
+  void _updateParticles(BuildContext context, Offset offsetGlobal) {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
-    var offset = renderBox.globalToLocal(details.globalPosition);
+    var offset = renderBox.globalToLocal(offsetGlobal);
     particles.forEach((particle) {
       var delta = (Offset(particle.cx, particle.cy) - offset);
       if (delta.distanceSquared < 70 * 70) {

@@ -11,3 +11,8 @@
 * Add image particles.
 * Add ability to extend and create new types of backgrounds.
 * Make example app more interactive.
+
+## [0.0.3] - 2018/07/14
+
+* No functional changes (except fixing the example)
+* Add basic documentation.

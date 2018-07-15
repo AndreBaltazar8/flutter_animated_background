@@ -7,11 +7,16 @@ import 'package:flutter/scheduler.dart';
 export 'particles.dart';
 export 'rectangles.dart';
 
+/// A widget that renders an animated background.
 class AnimatedBackground extends RenderObjectWidget {
+  /// The child widget that is rendered on top of the background
   final Widget child;
+  /// The ticker provider that provides the tick to update the background
   final TickerProvider vsync;
+  /// The behaviour used to render the particles
   final Behaviour behaviour;
 
+  /// Creates a new animated background with the provided arguments
   AnimatedBackground({
     Key key,
     @required this.child,
@@ -21,6 +26,7 @@ class AnimatedBackground extends RenderObjectWidget {
         assert(vsync != null),
         assert(behaviour != null),
         super(key: key);
+
   @override
   createRenderObject(BuildContext context) => RenderAnimatedBackground(
       vsync: vsync,
@@ -35,10 +41,6 @@ class AnimatedBackground extends RenderObjectWidget {
 
   @override
   _AnimatedBackgroundElement createElement() => _AnimatedBackgroundElement(this);
-
-  Widget builder(BuildContext context, BoxConstraints constraints) {
-    return behaviour.builder(context, constraints, child);
-  }
 }
 
 class _AnimatedBackgroundElement extends RenderObjectElement {
@@ -117,7 +119,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
     owner.buildScope(this, () {
       Widget built;
       try {
-        built = widget.builder(this, constraints);
+        built = widget.behaviour.builder(this, constraints, widget.child);
         debugWidgetBuilderValue(widget, built);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
@@ -151,12 +153,15 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 }
 
+/// An animated background in the render tree.
 class RenderAnimatedBackground extends RenderProxyBox {
   int lastTimeMs = 0;
   Ticker _ticker;
 
   Behaviour _behaviour;
+  /// Gets the behaviour used by this animated background.
   Behaviour get behaviour => _behaviour;
+  /// Set the behaviour used by this animated background.
   set behaviour(value) {
     assert(value != null);
     Behaviour oldBehaviour = _behaviour;
@@ -166,8 +171,10 @@ class RenderAnimatedBackground extends RenderProxyBox {
     _behaviour.initFrom(oldBehaviour);
   }
 
+  /// Gets the layout callback that should be called when performing layout.
   LayoutCallback<BoxConstraints> get callback => _callback;
   LayoutCallback<BoxConstraints> _callback;
+  /// Sets the layout callback that should be called when performing layout.
   set callback(LayoutCallback<BoxConstraints> value) {
     if (value == _callback)
       return;
@@ -175,6 +182,7 @@ class RenderAnimatedBackground extends RenderProxyBox {
     markNeedsLayout();
   }
 
+  /// Creates a new render for animated background with the provided arguments.
   RenderAnimatedBackground({
     @required TickerProvider vsync,
     @required Behaviour behaviour,
@@ -218,25 +226,51 @@ class RenderAnimatedBackground extends RenderProxyBox {
   }
 }
 
+/// Base class for behaviours provided to [AnimatedBackground]
+///
+/// Implementing this class allows to render new types of backgrounds.
 abstract class Behaviour {
+  /// The render object of the [AnimatedBackground] this behaviour is provided to.
+  @protected
   RenderAnimatedBackground renderObject;
+
+  /// The size of the render object of the [AnimatedBackground] this behaviour is provided to.
   @protected
   Size get size => renderObject?.size;
 
+  /// Gets the initialization state of this behaviour
   bool get isInitialized;
 
+  /// Called when this behaviour should be initialized
+  ///
+  /// After calling this method any call to [isInitialized] should return true.
   @protected
   void init();
 
+  /// Called when this behaviour should be initialized from an old behaviour.
   @protected
   void initFrom(Behaviour oldBehaviour);
 
+  /// Called each time there is an update from the ticker on the [AnimatedBackground]
+  ///
+  /// The implementation must return true if there is a need to repaint and
+  /// false otherwise.
   @protected
   bool tick(double delta, Duration elapsed);
 
+  /// Called each time the [AnimatedBackground] needs to repaint.
+  ///
+  /// The canvas provided in the context is already offset by the amount
+  /// specified in [offset], however the parameter is provided to make the
+  /// signature of the methods uniform.
   @protected
   void paint(PaintingContext context, Offset offset);
 
+  /// Called when the layout needs to be rebuilt.
+  ///
+  /// Allows the behaviour to include new widgets between the background and
+  /// the provided child. (ie. include a [GestureDetector] to make the
+  /// background interactive.
   @protected
   @mustCallSuper
   Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {

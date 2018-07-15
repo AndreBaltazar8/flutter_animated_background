@@ -7,30 +7,70 @@ import 'dart:ui' as ui;
 import 'animated_background.dart';
 import 'image_helper.dart';
 
-// We need these classes to use in copyWith, because there is no way to check if
-// the argument is set or not using an operator
+/// Dummy [Image] that represents a parameter not set. Used by
+/// [ParticleOptions.copyWith] to check if the parameter was set or not.
+class _NotSetImage extends Image {
+  const _NotSetImage() : super(image: const _NotSetImageProvider());
+}
+
+/// Dummy [ImageProvider] used by [_NotSetImage].
 class _NotSetImageProvider extends ImageProvider<_NotSetImageProvider> {
   const _NotSetImageProvider();
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _NotSetImage extends Image {
-  const _NotSetImage() : super(image: const _NotSetImageProvider());
-}
-
+/// Holds the particle configuration information for a [ParticleBehaviour].
 class ParticleOptions {
+  /// The image used by the particle. It is mutually exclusive with [baseColor].
   final Image image;
+
+  /// The color used by the particle. It is mutually exclusive with [image].
   final Color baseColor;
+
+  /// The minimum radius of a spawned particle. Changing this value should cause
+  /// the particles to update, in case their current radius is smaller than the
+  /// new value. The concrete effects depends on the instance of
+  /// [ParticleBehaviour] used.
   final double spawnMinRadius;
+
+  /// The maximum radius of a spawned particle. Changing this value should cause
+  /// the particles to update, in case their current radius is bigger than the
+  /// new value. The concrete effects depends on the instance of
+  /// [ParticleBehaviour] used.
   final double spawnMaxRadius;
+
+  /// The minimum speed of a spawned particle. Changing this value should cause
+  /// the particles to update, in case their current speed is smaller than the
+  /// new value. The concrete effects depends on the instance of
+  /// [ParticleBehaviour] used.
   final double spawnMinSpeed;
+
+  /// The maximum speed of a spawned particle. Changing this value should cause
+  /// the particles to update, in case their current speed is bigger than the
+  /// new value. The concrete effects depends on the instance of
+  /// [ParticleBehaviour] used.
   final double spawnMaxSpeed;
+
+  /// The opacity of a spawned particle.
   final double spawnOpacity;
+
+  /// The minimum opacity of a particle. It is used to compute the target
+  /// opacity after spawning. Implementation may differ by [ParticleBehaviour].
   final double minOpacity;
+
+  /// The maximum opacity of a particle. It is used to compute the target
+  /// opacity after spawning. Implementation may differ by [ParticleBehaviour].
   final double maxOpacity;
+
+  /// The opacity change rate of a particle over its lifetime.
   final double opacityChangeRate;
+
+  /// The total count of particles that should be spawned.
   final int particleCount;
 
+  /// Creates a [ParticleOptions] given a set of preferred values.
+  ///
+  /// Default values are assigned for arguments that are omitted.
   const ParticleOptions({
     this.image,
     this.baseColor = Colors.black,
@@ -68,6 +108,8 @@ class ParticleOptions {
         assert(spawnMaxSpeed >= 0.0),
         assert(particleCount >= 0);
 
+  /// Creates a copy of this [ParticleOptions] but with the given fields
+  /// replaced with new values.
   ParticleOptions copyWith({
     Image image = const _NotSetImage(),
     Color baseColor,
@@ -97,25 +139,65 @@ class ParticleOptions {
   }
 }
 
+/// Holds the information of a particle used in a [ParticleBehaviour].
 class Particle {
+  /// The X coordinate of the center of this particle.
   double cx = 0.0;
+
+  /// The Y coordinate of the center of this particle.
   double cy = 0.0;
+
+  /// The X component of the direction of this particle. This is usually scaled
+  /// by the speed of the particle, make it a non-normalized component of direction.
   double dx = 0.0;
+
+  /// The Y component of the direction of this particle This is usually scaled
+  /// by the speed of the particle, make it a non-normalized component of direction.
   double dy = 1.0;
+
+  /// The radius of this particle.
+  ///
+  /// If a [ParticleBehaviour] draws particles with images this value represents
+  /// half the width and height of this particle.
   double radius = 0.0;
+
+  /// The current alpha value of this particle.
   double alpha = 0.0;
+
+  /// The target alpha of this particle.
   double targetAlpha = 0.0;
+
+  /// Dynamic data that can be used by [ParticleBehaviour] classes to store
+  /// other information related to the particles.
   dynamic data;
 
+  /// Constructs a new [Particle] with its default values.
   Particle();
 
+  /// Gets the square of the speed of this particle.
   double get speedSqr => dx * dx + dy * dy;
-  set speedSqr (double value) {
+
+  /// Sets the square of the speed of this particle.
+  ///
+  /// If a negative value is provided the direction is flipped and the absolute
+  /// value is used to calculate the square root.
+  set speedSqr(double value) {
     speed = math.sqrt(value.abs()) * value.sign;
   }
 
+  /// Gets the speed of this particle.
   double get speed => math.sqrt(speedSqr);
-  set speed (double value) {
+
+  /// Sets the speed of this particle.
+  ///
+  /// In case the value is 0, the Y component of the direction will be set to 1
+  /// making the speed of the particle 1, instead of 0. The logic behind this
+  /// implementation is as follows: The [ParticleBahaviour] needs to the
+  /// smallest amount of work for each particle as possible. If a speed field
+  /// was provided to specify the velocity of the particle, it would require the
+  /// 2 additional multiplications (one for each component of direction) when
+  /// updating a particle.
+  set speed(double value) {
     double mag = speed;
     if (mag == 0) { // TODO: maybe find a better solution for this case
       dx = 0.0;
@@ -127,12 +209,11 @@ class Particle {
   }
 }
 
+/// The base for behaviours that render particles on an [AnimatedBackground].
 abstract class ParticleBehaviour extends Behaviour {
+  /// The list of particles used by the particle behaviour to hold the spawned particles.
   @protected
   List<Particle> particles;
-
-  @protected
-  ParticleOptions get options => _particleOptions;
 
   @override
   bool get isInitialized => particles != null;
@@ -157,28 +238,37 @@ abstract class ParticleBehaviour extends Behaviour {
       _paint.strokeWidth = 1.0;
   }
 
-  ParticleOptions _particleOptions;
-  ParticleOptions get particleOptions => _particleOptions;
-  set particleOptions(ParticleOptions value) {
-    assert(value != null);
-    if (value == _particleOptions)
-      return;
-    ParticleOptions oldOptions = _particleOptions;
-    _particleOptions = value;
+  ParticleOptions _options;
 
-    if (_particleOptions.image == null)
+  /// Gets the particle options used to configure this behaviour.
+  ParticleOptions get options => _options;
+
+  /// Set the particle options used to configure this behaviour.
+  ///
+  /// Changing this value will cause the currently spawned particles to update.
+  set options(ParticleOptions value) {
+    assert(value != null);
+    if (value == _options)
+      return;
+    ParticleOptions oldOptions = _options;
+    _options = value;
+
+    if (_options.image == null)
       _particleImage = null;
-    else if (_particleImage == null || oldOptions.image != _particleOptions.image)
-      _convertImage(_particleOptions.image);
+    else if (_particleImage == null || oldOptions.image != _options.image)
+      _convertImage(_options.image);
 
     onOptionsUpdate(oldOptions);
   }
 
+  /// Creates a new particle behaviour.
+  ///
+  /// Default values will be assigned to the parameters if not specified.
   ParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
     Paint paint,
   }) : assert(options != null) {
-    _particleOptions = options;
+    _options = options;
     this.particlePaint = paint;
     if (options.image != null)
       _convertImage(options.image);
@@ -189,7 +279,7 @@ abstract class ParticleBehaviour extends Behaviour {
     particles = generateParticles(options.particleCount);
   }
 
-  @protected
+  @override
   void initFrom(Behaviour oldBehaviour) {
     if (oldBehaviour is ParticleBehaviour) {
       particles = oldBehaviour.particles;
@@ -230,13 +320,22 @@ abstract class ParticleBehaviour extends Behaviour {
       _paint.color = options.baseColor.withOpacity(particle.alpha);
 
       if (_particleImage != null) {
-        Rect dst = Rect.fromLTRB(particle.cx - particle.radius, particle.cy - particle.radius, particle.cx + particle.radius, particle.cy + particle.radius);
+        Rect dst = Rect.fromLTRB(
+            particle.cx - particle.radius,
+            particle.cy - particle.radius,
+            particle.cx + particle.radius,
+            particle.cy + particle.radius,
+        );
         canvas.drawImageRect(_particleImage, _particleImageSrc, dst, _paint);
       } else
         canvas.drawCircle(Offset(particle.cx, particle.cy), particle.radius, _paint);
     }
   }
 
+  /// Generates an amount of particles and initializes them.
+  ///
+  /// This can be used to generate the initial particles or new particles when
+  /// the options change
   @protected
   List<Particle> generateParticles(int numParticles) {
     return List.generate(numParticles, (i) => i).map((i) {
@@ -284,9 +383,11 @@ abstract class ParticleBehaviour extends Behaviour {
   }
 }
 
+/// Renders particles that move in a predetermined direction on the [AnimatedBackground].
 class RandomParticleBehaviour extends ParticleBehaviour {
   static math.Random random = math.Random();
 
+  /// Creates a new random particle behaviour.
   RandomParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
     Paint paint,
@@ -313,17 +414,20 @@ class RandomParticleBehaviour extends ParticleBehaviour {
     p.targetAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
   }
 
+  /// Initializes a new position for the provided [Particle].
   @protected
   void initPosition(Particle p) {
     p.cx = random.nextDouble() * size.width;
     p.cy = random.nextDouble() * size.height;
   }
 
+  /// Initializes a new radius for the provided [Particle].
   @protected
   void initRadius(Particle p) {
     p.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
   }
 
+  /// Initializes a new direction for the provided [Particle].
   @protected
   void initDirection(Particle p, double speed) {
     double dirX = random.nextDouble() - 0.5;

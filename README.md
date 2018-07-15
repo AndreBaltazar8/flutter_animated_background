@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/animated_background.svg)](https://pub.dartlang.org/packages/animated_background)
 
-Animated backgrounds for Flutter.
+Animated Backgrounds for Flutter. Easily extended to paint whatever you want on the canvas.
 
 ![Screenshot](https://raw.githubusercontent.com/AndreBaltazar8/flutter_animated_background/master/screenshots/example_fill.gif)
 ![Screenshot](https://raw.githubusercontent.com/AndreBaltazar8/flutter_animated_background/master/screenshots/example_star.gif)
@@ -14,7 +14,7 @@ Note: These examples are laggy because they were recorded from the emulator. Oth
 In your pubspec.yaml:
 ```yaml
 dependencies:
-  animated_background: ^0.0.3
+  animated_background: ^0.0.4
 ```
 
 ```dart
