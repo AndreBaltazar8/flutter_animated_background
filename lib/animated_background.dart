@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 
 export 'particles.dart';
 export 'rectangles.dart';
+export 'lines.dart';
 
 /// A widget that renders an animated background.
 class AnimatedBackground extends RenderObjectWidget {
