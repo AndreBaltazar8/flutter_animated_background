@@ -199,7 +199,8 @@ class Particle {
   /// updating a particle.
   set speed(double value) {
     double mag = speed;
-    if (mag == 0) { // TODO: maybe find a better solution for this case
+    if (mag == 0) {
+      // TODO: maybe find a better solution for this case
       dx = 0.0;
       dy = value;
     } else {
@@ -234,8 +235,7 @@ abstract class ParticleBehaviour extends Behaviour {
       _paint = value;
     }
 
-    if (_paint.strokeWidth <= 0)
-      _paint.strokeWidth = 1.0;
+    if (_paint.strokeWidth <= 0) _paint.strokeWidth = 1.0;
   }
 
   ParticleOptions _options;
@@ -248,8 +248,7 @@ abstract class ParticleBehaviour extends Behaviour {
   /// Changing this value will cause the currently spawned particles to update.
   set options(ParticleOptions value) {
     assert(value != null);
-    if (value == _options)
-      return;
+    if (value == _options) return;
     ParticleOptions oldOptions = _options;
     _options = value;
 
@@ -270,8 +269,7 @@ abstract class ParticleBehaviour extends Behaviour {
   }) : assert(options != null) {
     _options = options;
     this.particlePaint = paint;
-    if (options.image != null)
-      _convertImage(options.image);
+    if (options.image != null) _convertImage(options.image);
   }
 
   @override
@@ -296,8 +294,7 @@ abstract class ParticleBehaviour extends Behaviour {
 
   @override
   bool tick(double delta, Duration elapsed) {
-    if (particles == null)
-      return false;
+    if (particles == null) return false;
 
     for (Particle particle in particles) {
       if (!size.contains(Offset(particle.cx, particle.cy))) {
@@ -315,20 +312,23 @@ abstract class ParticleBehaviour extends Behaviour {
   void paint(PaintingContext context, Offset offset) {
     final Canvas canvas = context.canvas;
     for (Particle particle in particles) {
-      if (particle.alpha == 0.0)
-        continue;
+      if (particle.alpha == 0.0) continue;
       _paint.color = options.baseColor.withOpacity(particle.alpha);
 
       if (_particleImage != null) {
         Rect dst = Rect.fromLTRB(
-            particle.cx - particle.radius,
-            particle.cy - particle.radius,
-            particle.cx + particle.radius,
-            particle.cy + particle.radius,
+          particle.cx - particle.radius,
+          particle.cy - particle.radius,
+          particle.cx + particle.radius,
+          particle.cy + particle.radius,
         );
         canvas.drawImageRect(_particleImage, _particleImageSrc, dst, _paint);
       } else
-        canvas.drawCircle(Offset(particle.cx, particle.cy), particle.radius, _paint);
+        canvas.drawCircle(
+          Offset(particle.cx, particle.cy),
+          particle.radius,
+          _paint,
+        );
     }
   }
 
@@ -352,12 +352,16 @@ abstract class ParticleBehaviour extends Behaviour {
   void updateParticle(Particle particle, double delta, Duration elapsed) {
     particle.cx += particle.dx * delta;
     particle.cy += particle.dy * delta;
-    if (options.opacityChangeRate > 0 && particle.alpha < particle.targetAlpha ||
-        options.opacityChangeRate < 0 && particle.alpha > particle.targetAlpha) {
+    if (options.opacityChangeRate > 0 &&
+            particle.alpha < particle.targetAlpha ||
+        options.opacityChangeRate < 0 &&
+            particle.alpha > particle.targetAlpha) {
       particle.alpha = particle.alpha + delta * options.opacityChangeRate;
 
-      if (options.opacityChangeRate > 0 && particle.alpha > particle.targetAlpha ||
-          options.opacityChangeRate < 0 && particle.alpha < particle.targetAlpha)
+      if (options.opacityChangeRate > 0 &&
+              particle.alpha > particle.targetAlpha ||
+          options.opacityChangeRate < 0 &&
+              particle.alpha < particle.targetAlpha)
         particle.alpha = particle.targetAlpha;
     }
   }
@@ -367,17 +371,24 @@ abstract class ParticleBehaviour extends Behaviour {
   void onOptionsUpdate(ParticleOptions oldOptions) {
     if (particles.length > options.particleCount)
       particles.removeRange(0, particles.length - options.particleCount);
-    else if (particles.length < options.particleCount)
-      particles.addAll(generateParticles(options.particleCount - particles.length));
+    else if (particles.length < options.particleCount) {
+      final int particlesToSpawn = options.particleCount - particles.length;
+      final newParticles = generateParticles(particlesToSpawn);
+      particles.addAll(newParticles);
+    }
   }
 
   void _convertImage(Image image) async {
-    if (_pendingConversion != null)
-      _pendingConversion();
+    if (_pendingConversion != null) _pendingConversion();
     _pendingConversion = convertImage(image, (ui.Image outImage) {
       _pendingConversion = null;
       if (outImage != null)
-        _particleImageSrc = Rect.fromLTRB(0.0, 0.0, outImage.width.toDouble(), outImage.height.toDouble());
+        _particleImageSrc = Rect.fromLTRB(
+          0.0,
+          0.0,
+          outImage.width.toDouble(),
+          outImage.height.toDouble(),
+        );
       _particleImage = outImage;
     });
   }
@@ -396,10 +407,10 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   @override
   void initFrom(Behaviour oldBehaviour) {
     super.initFrom(oldBehaviour);
-    if (oldBehaviour is RandomParticleBehaviour || particles == null)
-      return;
-    for (Particle particle in particles)
+    if (oldBehaviour is RandomParticleBehaviour || particles == null) return;
+    for (Particle particle in particles) {
       initParticle(particle);
+    }
   }
 
   @override
@@ -407,11 +418,13 @@ class RandomParticleBehaviour extends ParticleBehaviour {
     initPosition(p);
     initRadius(p);
 
-    double speed = random.nextDouble() * (options.spawnMaxSpeed - options.spawnMinSpeed) + options.spawnMinSpeed;
+    final double deltaSpeed = (options.spawnMaxSpeed - options.spawnMinSpeed);
+    double speed = random.nextDouble() * deltaSpeed + options.spawnMinSpeed;
     initDirection(p, speed);
 
+    final double deltaOpacity = (options.maxOpacity - options.minOpacity);
     p.alpha = options.spawnOpacity;
-    p.targetAlpha = random.nextDouble() * (options.maxOpacity - options.minOpacity) + options.minOpacity;
+    p.targetAlpha = random.nextDouble() * deltaOpacity + options.minOpacity;
   }
 
   /// Initializes a new position for the provided [Particle].
@@ -424,7 +437,8 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   /// Initializes a new radius for the provided [Particle].
   @protected
   void initRadius(Particle p) {
-    p.radius = random.nextDouble() * (options.spawnMaxRadius - options.spawnMinRadius) + options.spawnMinRadius;
+    final deltaRadius = (options.spawnMaxRadius - options.spawnMinRadius);
+    p.radius = random.nextDouble() * deltaRadius + options.spawnMinRadius;
   }
 
   /// Initializes a new direction for the provided [Particle].
@@ -449,13 +463,12 @@ class RandomParticleBehaviour extends ParticleBehaviour {
       double speedSqr = p.speedSqr;
       if (speedSqr > maxSpeedSqr)
         p.speed = options.spawnMaxSpeed;
-      else if (speedSqr < minSpeedSqr)
-        p.speed = options.spawnMinSpeed;
+      else if (speedSqr < minSpeedSqr) p.speed = options.spawnMinSpeed;
 
       // TODO: handle opacity change
 
-      if (p.radius < options.spawnMinRadius || p.radius > options.spawnMaxRadius)
-        initRadius(p);
+      if (p.radius < options.spawnMinRadius ||
+          p.radius > options.spawnMaxRadius) initRadius(p);
     }
   }
 }

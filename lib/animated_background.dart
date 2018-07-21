@@ -11,8 +11,10 @@ export 'rectangles.dart';
 class AnimatedBackground extends RenderObjectWidget {
   /// The child widget that is rendered on top of the background
   final Widget child;
+
   /// The ticker provider that provides the tick to update the background
   final TickerProvider vsync;
+
   /// The behaviour used to render the particles
   final Behaviour behaviour;
 
@@ -29,18 +31,19 @@ class AnimatedBackground extends RenderObjectWidget {
 
   @override
   createRenderObject(BuildContext context) => RenderAnimatedBackground(
-      vsync: vsync,
-      behaviour: behaviour,
-    );
+        vsync: vsync,
+        behaviour: behaviour,
+      );
 
   @override
-  void updateRenderObject(BuildContext context, RenderAnimatedBackground renderObject) {
-    renderObject
-      ..behaviour = behaviour;
+  void updateRenderObject(
+      BuildContext context, RenderAnimatedBackground renderObject) {
+    renderObject..behaviour = behaviour;
   }
 
   @override
-  _AnimatedBackgroundElement createElement() => _AnimatedBackgroundElement(this);
+  _AnimatedBackgroundElement createElement() =>
+      _AnimatedBackgroundElement(this);
 }
 
 class _AnimatedBackgroundElement extends RenderObjectElement {
@@ -62,7 +65,8 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void insertChildRenderObject(RenderObject child, slot) {
-    final RenderObjectWithChildMixin<RenderObject> renderObject = this.renderObject;
+    final RenderObjectWithChildMixin<RenderObject> renderObject =
+        this.renderObject;
     assert(slot == null);
     assert(renderObject.debugValidateChild(child));
     renderObject.child = child;
@@ -84,8 +88,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void visitChildren(ElementVisitor visitor) {
-    if (_child != null)
-      visitor(_child);
+    if (_child != null) visitor(_child);
   }
 
   @override
@@ -122,25 +125,32 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
         built = widget.behaviour.builder(this, constraints, widget.child);
         debugWidgetBuilderValue(widget, built);
       } catch (e, stack) {
-        built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
+        built = ErrorWidget.builder(_debugReportException(
+          'building $widget',
+          e,
+          stack,
+        ));
       }
 
       try {
         _child = updateChild(_child, built, null);
         assert(_child != null);
       } catch (e, stack) {
-        built = ErrorWidget.builder(_debugReportException('building $widget', e, stack));
+        built = ErrorWidget.builder(_debugReportException(
+          'building $widget',
+          e,
+          stack,
+        ));
         _child = updateChild(null, built, slot);
       }
     });
   }
 
   FlutterErrorDetails _debugReportException(
-      String context,
-      exception,
-      StackTrace stack,
-      ) {
-
+    String context,
+    exception,
+    StackTrace stack,
+  ) {
     final FlutterErrorDetails details = FlutterErrorDetails(
       exception: exception,
       stack: stack,
@@ -159,8 +169,10 @@ class RenderAnimatedBackground extends RenderProxyBox {
   Ticker _ticker;
 
   Behaviour _behaviour;
+
   /// Gets the behaviour used by this animated background.
   Behaviour get behaviour => _behaviour;
+
   /// Set the behaviour used by this animated background.
   set behaviour(value) {
     assert(value != null);
@@ -174,10 +186,10 @@ class RenderAnimatedBackground extends RenderProxyBox {
   /// Gets the layout callback that should be called when performing layout.
   LayoutCallback<BoxConstraints> get callback => _callback;
   LayoutCallback<BoxConstraints> _callback;
+
   /// Sets the layout callback that should be called when performing layout.
   set callback(LayoutCallback<BoxConstraints> value) {
-    if (value == _callback)
-      return;
+    if (value == _callback) return;
     _callback = value;
     markNeedsLayout();
   }
@@ -199,23 +211,20 @@ class RenderAnimatedBackground extends RenderProxyBox {
     double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
     lastTimeMs = elapsed.inMilliseconds;
 
-    if (_behaviour.tick(delta, elapsed))
-      markNeedsPaint();
+    if (_behaviour.tick(delta, elapsed)) markNeedsPaint();
   }
 
   @override
   void performLayout() {
     assert(callback != null);
     invokeLayoutCallback(callback);
-    if (child != null)
-      child.layout(constraints, parentUsesSize: true);
+    if (child != null) child.layout(constraints, parentUsesSize: true);
     size = constraints.biggest;
   }
 
   @override
   paint(PaintingContext context, Offset offset) {
-    if (!behaviour.isInitialized)
-      behaviour.init();
+    if (!behaviour.isInitialized) behaviour.init();
 
     Canvas canvas = context.canvas;
     canvas.translate(offset.dx, offset.dy);
@@ -273,7 +282,11 @@ abstract class Behaviour {
   /// background interactive.
   @protected
   @mustCallSuper
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+  Widget builder(
+    BuildContext context,
+    BoxConstraints constraints,
+    Widget child,
+  ) {
     return child;
   }
 }

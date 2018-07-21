@@ -35,10 +35,10 @@ class RectanglesBehaviour extends Behaviour {
   /// Generates random color to be used by the rectangles
   static HSVColor randomColor() {
     return HSVColor.fromAHSV(
-        1.0,
-        ((random.nextDouble() * 360) % 36) * 10,
-        random.nextDouble() * 0.2 + 0.1,
-        random.nextDouble() * 0.1 + 0.9
+      1.0,
+      ((random.nextDouble() * 360) % 36) * 10,
+      random.nextDouble() * 0.2 + 0.1,
+      random.nextDouble() * 0.1 + 0.9,
     );
   }
 
@@ -61,16 +61,14 @@ class RectanglesBehaviour extends Behaviour {
   @override
   void initFrom(Behaviour oldBehaviour) {
     if (oldBehaviour is RectanglesBehaviour) {
-      if (_rectList != null)
-        _rectList = oldBehaviour._rectList;
+      if (_rectList != null) _rectList = oldBehaviour._rectList;
     }
   }
 
   @override
   void paint(PaintingContext context, Offset offset) {
     final Canvas canvas = context.canvas;
-    final Paint rectPaint = Paint()
-      ..strokeWidth = 1.0;
+    final Paint rectPaint = Paint()..strokeWidth = 1.0;
     for (Rectangle rect in _rectList) {
       rectPaint.color = rect.color.toColor();
       canvas.drawRect(rect.rect, rectPaint);
@@ -79,8 +77,7 @@ class RectanglesBehaviour extends Behaviour {
 
   @override
   bool tick(double delta, Duration elapsed) {
-    if (_rectList == null)
-      return false;
+    if (_rectList == null) return false;
     for (Rectangle rect in _rectList) {
       rect.t = math.min(rect.t + delta * 0.5, 1.0);
 
