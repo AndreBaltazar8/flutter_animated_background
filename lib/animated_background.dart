@@ -208,6 +208,8 @@ class RenderAnimatedBackground extends RenderProxyBox {
   }
 
   void _tick(Duration elapsed) {
+    if (!_behaviour.isInitialized) return;
+
     double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
     lastTimeMs = elapsed.inMilliseconds;
 
