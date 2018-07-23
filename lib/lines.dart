@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
+import 'package:meta/meta.dart';
 
 import 'animated_background.dart';
 
