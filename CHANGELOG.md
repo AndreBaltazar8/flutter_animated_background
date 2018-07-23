@@ -12,7 +12,14 @@
 * Add ability to extend and create new types of backgrounds.
 * Make example app more interactive.
 
-## [0.0.3] - 2018/07/14
+## [0.0.4] - 2018/07/14
 
 * No functional changes (except fixing the example)
 * Add basic documentation.
+
+## [0.0.5] - 2018/07/23
+
+* New Racing Lines Behaviour
+* Allow Dart 2.0
+* Format code
+
