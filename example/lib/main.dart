@@ -53,6 +53,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.0;
 
+  var _lineDirection = LineDirection.Ltr;
+
   int _behaviourIndex = 0;
   Behaviour _behaviour;
 
@@ -142,7 +144,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         SizedBox(height: 10.0),
         Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
         SizedBox(height: 10.0),
-      ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty()),
+      ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty())
+        ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty()),
     );
   }
 
@@ -428,6 +431,24 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
+
+  List<Widget> _buildLinesSettings() {
+    return <Widget>[
+      Row(
+        children: <Widget>[
+          RaisedButton(
+            child: Text('Next Direction'),
+            onPressed: () {
+              setState(() {
+                _lineDirection = LineDirection.values[(_lineDirection.index + 1) % 4];
+              });
+            },
+          ),
+        ],
+      ),
+    ];
+  }
+
   Behaviour _buildBehaviour() {
     switch (_behaviourIndex) {
       case 0:
@@ -444,7 +465,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       case 2:
         return RectanglesBehaviour();
       case 3:
-        return RacingLinesBehaviour();
+        return RacingLinesBehaviour(
+          direction: _lineDirection,
+        );
     }
 
     return RandomParticleBehaviour(
