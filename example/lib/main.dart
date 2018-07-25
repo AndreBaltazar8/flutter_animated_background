@@ -54,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     ..strokeWidth = 1.0;
 
   var _lineDirection = LineDirection.Ltr;
+  int _lineCount = 50;
 
   int _behaviourIndex = 0;
   Behaviour _behaviour;
@@ -436,6 +437,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return <Widget>[
       Row(
         children: <Widget>[
+          Text('Count:'),
+          Slider(
+            value: _lineCount.toDouble(),
+            min: 0.0,
+            max: 500.0,
+            divisions: 100,
+            onChanged: (value) {
+              setState(() {
+                _lineCount = value.floor();
+              });
+            },
+          ),
+          Text(
+            '$_lineCount',
+            style: Theme.of(context).textTheme.display1,
+          ),
+        ],
+      ),
+      Row(
+        children: <Widget>[
           RaisedButton(
             child: Text('Next Direction'),
             onPressed: () {
@@ -467,6 +488,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       case 3:
         return RacingLinesBehaviour(
           direction: _lineDirection,
+          numLines: _lineCount,
         );
     }
 

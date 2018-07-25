@@ -41,17 +41,37 @@ class RacingLinesBehaviour extends Behaviour {
   static final math.Random random = math.Random();
 
   /// Creates a new racing lines behaviour
-  RacingLinesBehaviour({this.direction = LineDirection.Ltr})
-      : assert(direction != null);
+  RacingLinesBehaviour({this.direction = LineDirection.Ltr, int numLines = 50})
+      : assert(direction != null),
+        assert(numLines != null),
+        assert(numLines >= 0) {
+    _numLines = numLines;
+  }
 
   /// The list of lines used by the behaviour to hold the spawned lines.
   @protected
   List<Line> lines;
 
+  int _numLines;
+
+  /// Gets the number of lines in the background.
+  int get numLines => _numLines;
+
+  /// Sets the number of lines in the background.
+  set numLines(value) {
+    if (isInitialized) {
+      if (value > lines.length)
+        lines.addAll(generateLines(value - lines.length));
+      else if (value < lines.length) lines.removeRange(0, lines.length - value);
+    }
+    _numLines = value;
+  }
+
   /// The direction in which the lines should move
   ///
   /// Changing this will cause all lines to move in this direction, but no
   /// animation will be performed to change the direction. The lines will
+  @protected
   LineDirection direction;
 
   /// Generates an amount of lines and initializes them.
@@ -100,13 +120,14 @@ class RacingLinesBehaviour extends Behaviour {
 
   @override
   void init() {
-    lines = generateLines(50);
+    lines = generateLines(numLines);
   }
 
   @override
   void initFrom(Behaviour oldBehaviour) {
     if (oldBehaviour is RacingLinesBehaviour) {
       lines = oldBehaviour.lines;
+      numLines = this._numLines; // causes the lines to update
     }
   }
 
