@@ -30,7 +30,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  static const numBehaviours = 4;
+  static const numBehaviours = 5;
 
   ParticleType _particleType = ParticleType.Image;
   Image _image = Image.asset('assets/images/star_stroke.png');
@@ -490,6 +490,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           direction: _lineDirection,
           numLines: _lineCount,
         );
+      case 4:
+        return BubblesBehaviour();
     }
 
     return RandomParticleBehaviour(
