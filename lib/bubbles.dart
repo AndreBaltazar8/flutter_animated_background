@@ -47,9 +47,16 @@ class BubblesBehaviour extends Behaviour {
       random.nextDouble() * size.width,
       random.nextDouble() * size.height,
     );
-    bubble.radius = 0.0;
+
     bubble.targetRadius =
         random.nextDouble() * deltaTargetRadius + minTargetRadius;
+
+    if (bubble.radius == null) {
+      bubble.radius = random.nextDouble() * bubble.targetRadius;
+    } else {
+      bubble.radius = 0.0;
+    }
+
     bubble.color = HSVColor
         .fromAHSV(
           random.nextDouble() * 0.3 + 0.2,
