@@ -70,8 +70,8 @@ class BubblesBehaviour extends Behaviour {
 
   void _popBubble(Bubble bubble) {
     bubble.popping = true;
-    bubble.targetRadius = 0.5 * bubble.radius;
-    bubble.radius *= 0.2;
+    bubble.radius = 0.2 * bubble.targetRadius;
+    bubble.targetRadius *= 0.5;
   }
 
   @override
