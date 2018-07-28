@@ -22,20 +22,110 @@ class Bubble {
   bool popping;
 }
 
+/// Holds the bubbles configuration information for a [BubblesBehaviour].
+class BubbleOptions {
+  /// The total count of bubbles that should be spawned.
+  final int bubbleCount;
+
+  /// The minimum radius a bubble should grow to before popping.
+  final double minTargetRadius;
+
+  /// The maximum radius a bubble should grow to.
+  final double maxTargetRadius;
+
+  /// The growth rate of the bubbles.
+  final double growthRate;
+
+  /// The pop rate of the bubbles.
+  final double popRate;
+
+  /// Creates a [BubbleOptions] given a set of preferred values.
+  ///
+  /// Default values are assigned for arguments that are omitted.
+  const BubbleOptions({
+    this.bubbleCount = 20,
+    this.minTargetRadius = 15.0,
+    this.maxTargetRadius = 50.0,
+    this.growthRate = 10.0,
+    this.popRate = 150.0,
+  })  : assert(bubbleCount != null),
+        assert(minTargetRadius != null),
+        assert(maxTargetRadius != null),
+        assert(growthRate != null),
+        assert(popRate != null),
+        assert(bubbleCount >= 0),
+        assert(minTargetRadius > 0),
+        assert(maxTargetRadius > 0),
+        assert(growthRate > 0),
+        assert(popRate > 0);
+
+  /// Creates a copy of this [BubbleOptions] but with the given fields
+  /// replaced with new values.
+  BubbleOptions copyWith({
+    int bubbleCount,
+    double minTargetRadius,
+    double maxTargetRadius,
+    double growthRate,
+    double popRate,
+  }) {
+    return BubbleOptions(
+      bubbleCount: bubbleCount ?? this.bubbleCount,
+      minTargetRadius: minTargetRadius ?? this.minTargetRadius,
+      maxTargetRadius: maxTargetRadius ?? this.maxTargetRadius,
+      growthRate: growthRate ?? this.growthRate,
+      popRate: popRate ?? this.popRate,
+    );
+  }
+}
+
 /// Renders bubbles on an [AnimatedBackground].
 class BubblesBehaviour extends Behaviour {
   static math.Random random = math.Random();
-  List<Bubble> _bubbles;
-  static const int numBubbles = 20;
-  static const double minTargetRadius = 10.0;
-  static const double maxTargetRadius = 50.0;
-  static const double deltaTargetRadius = maxTargetRadius - minTargetRadius;
-  static const double growthRate = 10.0;
+
   static const double sqrtInverse = 0.707;
+
+  @protected
+  List<Bubble> bubbles;
+  double deltaTargetRadius;
+
+  BubbleOptions _options;
+
+  /// Gets the bubbles options used to configure this behaviour.
+  BubbleOptions get options => _options;
+
+  /// Set the bubble options used to configure this behaviour.
+  ///
+  /// Changing this value will cause the currently spawned bubbles to update.
+  set options(BubbleOptions value) {
+    assert(value != null);
+    if (value == _options) return;
+    BubbleOptions oldOptions = _options;
+    _options = value;
+
+    onOptionsUpdate(oldOptions);
+  }
+
+  /// Creates a new bubbles behaviour.
+  ///
+  /// Default values will be assigned to the parameters if not specified.
+  BubblesBehaviour({
+    BubbleOptions options = const BubbleOptions(),
+  }) : assert(options != null) {
+    _options = options;
+  }
 
   @override
   void init() {
-    _bubbles = List<Bubble>.generate(numBubbles, (_) {
+    bubbles = generateBubbles(options.bubbleCount);
+  }
+
+  /// Generates an amount of bubbles and initializes them.
+  ///
+  /// This can be used to generate the initial bubbles or new bubbles when
+  /// the options change
+  @protected
+  List<Bubble> generateBubbles(int num) {
+    return List<Bubble>.generate(num, (_) {
       Bubble bubble = Bubble();
       _initBubble(bubble);
       return bubble;
@@ -48,8 +138,9 @@ class BubblesBehaviour extends Behaviour {
       random.nextDouble() * size.height,
     );
 
+    var deltaTargetRadius = options.maxTargetRadius - options.minTargetRadius;
     bubble.targetRadius =
-        random.nextDouble() * deltaTargetRadius + minTargetRadius;
+        random.nextDouble() * deltaTargetRadius + options.minTargetRadius;
 
     if (bubble.radius == null) {
       bubble.radius = random.nextDouble() * bubble.targetRadius;
@@ -77,20 +168,37 @@ class BubblesBehaviour extends Behaviour {
   @override
   void initFrom(Behaviour oldBehaviour) {
     if (oldBehaviour is BubblesBehaviour) {
-      _bubbles = oldBehaviour._bubbles;
+      bubbles = oldBehaviour.bubbles;
+
+      onOptionsUpdate(oldBehaviour.options);
+    }
+  }
+
+  /// Called when the behaviour got new options and should update accordingly.
+  @protected
+  @mustCallSuper
+  void onOptionsUpdate(BubbleOptions oldOptions) {
+    if (bubbles.length > options.bubbleCount)
+      bubbles.removeRange(0, bubbles.length - options.bubbleCount);
+    else if (bubbles.length < options.bubbleCount) {
+      final int numToSpawn = options.bubbleCount - bubbles.length;
+      final newBubbles = generateBubbles(numToSpawn);
+      bubbles.addAll(newBubbles);
     }
   }
 
   @override
-  bool get isInitialized => _bubbles != null;
+  bool get isInitialized => bubbles != null;
 
   @override
   void paint(PaintingContext context, Offset offset) {
     var canvas = context.canvas;
     Paint paint = Paint()
       ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    for (var bubble in _bubbles) {
+
+    for (var bubble in bubbles) {
       paint.color = bubble.color;
       if (!bubble.popping) {
         canvas.drawCircle(bubble.position, bubble.radius, paint);
@@ -132,8 +240,9 @@ class BubblesBehaviour extends Behaviour {
   @override
   bool tick(double delta, Duration elapsed) {
     if (!isInitialized) return false;
-    for (var bubble in _bubbles) {
-      bubble.radius += growthRate * delta * (bubble.popping ? 15 : 1);
+    for (var bubble in bubbles) {
+      bubble.radius +=
+          delta * (bubble.popping ? options.popRate : options.growthRate);
 
       if (bubble.radius >= bubble.targetRadius) {
         if (bubble.popping)
@@ -162,7 +271,7 @@ class BubblesBehaviour extends Behaviour {
   void _onTap(BuildContext context, Offset globalPosition) {
     RenderBox renderBox = context.findRenderObject();
     var localPosition = renderBox.globalToLocal(globalPosition);
-    for (var bubble in _bubbles) {
+    for (var bubble in bubbles) {
       if ((bubble.position - localPosition).distanceSquared <
           bubble.radius * bubble.radius * 1.2) {
         _popBubble(bubble);

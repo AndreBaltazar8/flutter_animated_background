@@ -32,6 +32,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   static const numBehaviours = 5;
 
+  // Particles
   ParticleType _particleType = ParticleType.Image;
   Image _image = Image.asset('assets/images/star_stroke.png');
 
@@ -53,9 +54,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.0;
 
+  // Lines
+
   var _lineDirection = LineDirection.Ltr;
   int _lineCount = 50;
 
+  // Bubbles
+  BubbleOptions _bubbleOptions = BubbleOptions();
+
+  // General Variables
   int _behaviourIndex = 0;
   Behaviour _behaviour;
 
@@ -146,7 +153,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
         SizedBox(height: 10.0),
       ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty())
-        ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty()),
+        ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty())
+        ..addAll(_behaviour is BubblesBehaviour ? _buildBubblesSettings() : Iterable.empty()),
     );
   }
 
@@ -432,7 +440,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-
   List<Widget> _buildLinesSettings() {
     return <Widget>[
       Row(
@@ -470,6 +477,111 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     ];
   }
 
+  List<Widget> _buildBubblesSettings() {
+    return <Widget>[
+      Row(
+        children: <Widget>[
+          Text('Count:'),
+          Slider(
+            value: _bubbleOptions.bubbleCount.toDouble(),
+            min: 0.0,
+            max: 400.0,
+            divisions: 400,
+            onChanged: (value) {
+              setState(() {
+                _bubbleOptions = _bubbleOptions.copyWith(
+                  bubbleCount: value.floor(),
+                );
+              });
+            },
+          ),
+          Text(
+            '${_bubbleOptions.bubbleCount}',
+            style: Theme.of(context).textTheme.display1,
+          ),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Min radius:'),
+          Slider(
+            value: _bubbleOptions.minTargetRadius,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                _bubbleOptions = _bubbleOptions.copyWith(
+                  minTargetRadius: value,
+                  maxTargetRadius: math.max(_bubbleOptions.maxTargetRadius, value),
+                );
+              });
+            },
+          ),
+          Text('${_bubbleOptions.minTargetRadius.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Max radius:'),
+          Slider(
+            value: _bubbleOptions.maxTargetRadius,
+            min: 1.0,
+            max: 100.0,
+            divisions: 99,
+            onChanged: (value) {
+              setState(() {
+                _bubbleOptions = _bubbleOptions.copyWith(
+                  maxTargetRadius: value,
+                  minTargetRadius: math.min(_bubbleOptions.minTargetRadius, value),
+                );
+              });
+            },
+          ),
+          Text('${_bubbleOptions.maxTargetRadius.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Growth Rate:'),
+          Slider(
+            value: _bubbleOptions.growthRate,
+            min: 0.0,
+            max: 400.0,
+            divisions: 401,
+            onChanged: (value) {
+              setState(() {
+                _bubbleOptions = _bubbleOptions.copyWith(
+                  growthRate: value,
+                );
+              });
+            },
+          ),
+          Text('${_bubbleOptions.growthRate.toInt()}'),
+        ],
+      ),
+      Row(
+        children: <Widget>[
+          Text('Pop Rate:'),
+          Slider(
+            value: _bubbleOptions.popRate,
+            min: 0.0,
+            max: 400.0,
+            divisions: 401,
+            onChanged: (value) {
+              setState(() {
+                _bubbleOptions = _bubbleOptions.copyWith(
+                  popRate: value,
+                );
+              });
+            },
+          ),
+          Text('${_bubbleOptions.popRate.toInt()}'),
+        ],
+      ),
+    ];
+  }
+
   Behaviour _buildBehaviour() {
     switch (_behaviourIndex) {
       case 0:
@@ -491,7 +603,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           numLines: _lineCount,
         );
       case 4:
-        return BubblesBehaviour();
+        return BubblesBehaviour(
+          options: _bubbleOptions,
+        );
     }
 
     return RandomParticleBehaviour(
