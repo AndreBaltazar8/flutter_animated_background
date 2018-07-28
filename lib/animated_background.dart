@@ -8,6 +8,7 @@ export 'particles.dart';
 export 'rectangles.dart';
 export 'lines.dart';
 export 'bubbles.dart';
+export 'space.dart';
 
 /// A widget that renders an animated background.
 class AnimatedBackground extends RenderObjectWidget {
