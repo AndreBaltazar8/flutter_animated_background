@@ -116,6 +116,7 @@ class SpaceBehaviour extends Behaviour {
   Widget builder(
       BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onPanUpdate: (details) => _updateCenter(context, details.globalPosition),
       onTapDown: (details) => _updateCenter(context, details.globalPosition),
       child: ConstrainedBox(
@@ -131,5 +132,45 @@ class SpaceBehaviour extends Behaviour {
     RenderBox renderBox = context.findRenderObject();
     var localPosition = renderBox.globalToLocal(globalPosition);
     targetCenter = localPosition;
+  }
+}
+
+
+/// Experimental behaviour...
+///
+/// Gesture detection does not work properly while is animating..
+class ChildFlySpaceBehaviour extends SpaceBehaviour {
+  bool flying = true;
+  double childZ = 100.0;
+
+  @override
+  bool tick(double delta, Duration elapsed) {
+    if (flying) {
+      childZ = math.max(0.0, childZ - 50 * delta);
+      renderObject.markNeedsLayout();
+      if (childZ == 0.0)
+        flying = false;
+    }
+
+    return super.tick(delta, elapsed);
+  }
+
+  @override
+  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+    double widgetX = 0.0, widgetY = 0.0;
+    if (renderObject.hasSize != null) {
+      widgetX = size.width / 2 * childZ;
+      widgetY = size.height / 2 * childZ;
+    }
+
+    return Opacity(
+      opacity: (100 - childZ) / 100,
+      child: Transform(
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 1.0)
+          ..translate(widgetX, widgetY, childZ),
+        child: super.builder(context, constraints, child),
+      ),
+    );
   }
 }
