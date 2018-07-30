@@ -168,7 +168,8 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
 /// An animated background in the render tree.
 class RenderAnimatedBackground extends RenderProxyBox {
-  int lastTimeMs = 0;
+  int _lastTimeMs = 0;
+  TickerProvider _vsync;
   Ticker _ticker;
 
   Behaviour _behaviour;
@@ -203,18 +204,30 @@ class RenderAnimatedBackground extends RenderProxyBox {
     @required Behaviour behaviour,
   })  : assert(vsync != null),
         assert(behaviour != null),
+        _vsync = vsync,
         _behaviour = behaviour {
     _behaviour.renderObject = this;
+  }
 
-    _ticker = vsync.createTicker(_tick);
+  @override
+  void attach(PipelineOwner owner) {
+    _lastTimeMs = 0;
+    _ticker = _vsync.createTicker(_tick);
     _ticker.start();
+    super.attach(owner);
+  }
+
+  @override
+  void detach() {
+    _ticker.dispose();
+    super.detach();
   }
 
   void _tick(Duration elapsed) {
     if (!_behaviour.isInitialized) return;
 
-    double delta = (elapsed.inMilliseconds - lastTimeMs) / 1000.0;
-    lastTimeMs = elapsed.inMilliseconds;
+    double delta = (elapsed.inMilliseconds - _lastTimeMs) / 1000.0;
+    _lastTimeMs = elapsed.inMilliseconds;
 
     if (_behaviour.tick(delta, elapsed)) markNeedsPaint();
   }
