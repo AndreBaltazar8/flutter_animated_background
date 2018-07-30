@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:example/helpers/fade_route.dart';
+import 'package:example/views/space_splash.dart';
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
@@ -154,7 +156,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         SizedBox(height: 10.0),
       ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty())
         ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty())
-        ..addAll(_behaviour is BubblesBehaviour ? _buildBubblesSettings() : Iterable.empty()),
+        ..addAll(_behaviour is BubblesBehaviour ? _buildBubblesSettings() : Iterable.empty())
+        ..addAll(_behaviour is SpaceBehaviour ? _buildSpaceSettings() : Iterable.empty()),
     );
   }
 
@@ -577,6 +580,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             },
           ),
           Text('${_bubbleOptions.popRate.toInt()}'),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _buildSpaceSettings() {
+    return <Widget>[
+      Row(
+        children: <Widget>[
+          RaisedButton(
+            child: Text('Launch Example Splash'),
+            onPressed: () {
+              setState(() {
+                Navigator.of(context).push(SimpleFadeRoute(
+                  child: SpaceSplash(),
+                ));
+              });
+            },
+          ),
         ],
       ),
     ];
