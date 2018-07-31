@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:example/helpers/fade_route.dart';
-import 'package:example/views/space_splash.dart';
+import './helpers/fade_route.dart';
+import './views/space_splash.dart';
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
