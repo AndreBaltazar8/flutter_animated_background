@@ -3,22 +3,35 @@ import 'dart:math' as math;
 import 'package:animated_background/animated_background.dart';
 import 'package:flutter/widgets.dart';
 
+/// Holds the information of a star used in a [SpaceBehaviour].
 class Star {
+  /// The position of the star
   Offset position;
+
+  /// The target position of the star
   Offset targetPosition;
+
+  /// The distance of the start to the screen
   double distance;
 }
 
-// Code inspired by http://www.kevs3d.co.uk/dev/warpfield/
+/// Renders a warp field on a [AnimatedBackground].
+///
+/// Code inspired by http://www.kevs3d.co.uk/dev/warpfield/
 class SpaceBehaviour extends Behaviour {
   static math.Random random = math.Random();
 
+  /// The center of the warp field.
   @protected
   Offset center;
 
+  /// The target center of the warp field.
+  ///
+  /// Changing this value will cause the [center] to animate to this value.
   @protected
   Offset targetCenter;
 
+  /// The list of stars spawned by the behaviour
   @protected
   List<Star> stars;
 
@@ -135,40 +148,43 @@ class SpaceBehaviour extends Behaviour {
   }
 }
 
-
-/// Experimental behaviour...
+/// Render a wrap field like [SpaceBehaviour] but animated the child as a star.
 ///
-/// Gesture detection does not work properly while is animating..
+/// This is an very experimental behaviour, which could be implemented as a
+/// normal Flutter animation. It can be removed at any time.
+///
+/// Known issues:
+///  - Gesture detection does not work properly while is animating.
 class ChildFlySpaceBehaviour extends SpaceBehaviour {
-  bool flying = true;
-  double childZ = 100.0;
+  bool _flying = true;
+  double _childZ = 100.0;
 
   @override
   bool tick(double delta, Duration elapsed) {
-    if (flying) {
-      childZ = math.max(0.0, childZ - 50 * delta);
+    if (_flying) {
+      _childZ = math.max(0.0, _childZ - 50 * delta);
       renderObject.markNeedsLayout();
-      if (childZ == 0.0)
-        flying = false;
+      if (_childZ == 0.0) _flying = false;
     }
 
     return super.tick(delta, elapsed);
   }
 
   @override
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+  Widget builder(
+      BuildContext context, BoxConstraints constraints, Widget child) {
     double widgetX = 0.0, widgetY = 0.0;
-    if (renderObject.hasSize != null) {
-      widgetX = size.width / 2 * childZ;
-      widgetY = size.height / 2 * childZ;
+    if (renderObject.hasSize) {
+      widgetX = size.width / 2 * _childZ;
+      widgetY = size.height / 2 * _childZ;
     }
 
     return Opacity(
-      opacity: (100 - childZ) / 100,
+      opacity: (100 - _childZ) / 100,
       child: Transform(
         transform: Matrix4.identity()
           ..setEntry(3, 2, 1.0)
-          ..translate(widgetX, widgetY, childZ),
+          ..translate(widgetX, widgetY, _childZ),
         child: super.builder(context, constraints, child),
       ),
     );

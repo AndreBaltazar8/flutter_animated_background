@@ -1,3 +1,17 @@
+## [Unreleased]
+
+## [1.0.0] - 2018/07/31
+### Added
+* New Space warp field behaviour and "fly child" experimental behaviour.
+* New Bubbles behaviour.
+* Add configuration for racing lines behaviour.
+
+### Changed
+* Tick is no longer called when the behaviour is not initialized.
+
+### Fixed
+* The render object ticker is now disposed correctly.
+
 ## [0.0.6] - 2018/07/23
 
 * Fix dependencies
