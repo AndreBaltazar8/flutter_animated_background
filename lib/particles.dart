@@ -369,6 +369,8 @@ abstract class ParticleBehaviour extends Behaviour {
   @protected
   @mustCallSuper
   void onOptionsUpdate(ParticleOptions oldOptions) {
+    if (particles == null)
+      return;
     if (particles.length > options.particleCount)
       particles.removeRange(0, particles.length - options.particleCount);
     else if (particles.length < options.particleCount) {
@@ -458,6 +460,8 @@ class RandomParticleBehaviour extends ParticleBehaviour {
     super.onOptionsUpdate(oldOptions);
     double minSpeedSqr = options.spawnMinSpeed * options.spawnMinSpeed;
     double maxSpeedSqr = options.spawnMaxSpeed * options.spawnMaxSpeed;
+    if (particles == null)
+      return;
     for (Particle p in particles) {
       // speed assignment is better done this way, to prevent calculation of square roots if not needed
       double speedSqr = p.speedSqr;
