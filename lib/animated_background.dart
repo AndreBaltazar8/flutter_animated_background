@@ -308,3 +308,27 @@ abstract class Behaviour {
     return child;
   }
 }
+
+/// Empty Behaviour that renders nothing on an [AnimatedBackground]
+class EmptyBehaviour extends Behaviour {
+  static EmptyBehaviour _empty;
+
+  EmptyBehaviour._();
+
+  factory EmptyBehaviour() => _empty ?? (_empty = EmptyBehaviour._());
+
+  @override
+  void init() {}
+
+  @override
+  void initFrom(Behaviour oldBehaviour) {}
+
+  @override
+  bool get isInitialized => true;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {}
+
+  @override
+  bool tick(double delta, Duration elapsed) => false;
+}
