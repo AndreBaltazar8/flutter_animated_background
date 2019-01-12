@@ -88,6 +88,9 @@ class BubblesBehaviour extends Behaviour {
   List<Bubble> bubbles;
   double deltaTargetRadius;
 
+  /// Called when a bubble pops
+  Function(bool wasTap) onPop;
+
   BubbleOptions _options;
 
   /// Gets the bubbles options used to configure this behaviour.
@@ -110,6 +113,7 @@ class BubblesBehaviour extends Behaviour {
   /// Default values will be assigned to the parameters if not specified.
   BubblesBehaviour({
     BubbleOptions options = const BubbleOptions(),
+    this.onPop,
   }) : assert(options != null) {
     _options = options;
   }
@@ -159,10 +163,12 @@ class BubblesBehaviour extends Behaviour {
     bubble.popping = false;
   }
 
-  void _popBubble(Bubble bubble) {
+  void _popBubble(Bubble bubble, bool wasTap) {
     bubble.popping = true;
     bubble.radius = 0.2 * bubble.targetRadius;
     bubble.targetRadius *= 0.5;
+    if (onPop != null)
+      onPop(wasTap);
   }
 
   @override
@@ -178,6 +184,8 @@ class BubblesBehaviour extends Behaviour {
   @protected
   @mustCallSuper
   void onOptionsUpdate(BubbleOptions oldOptions) {
+    if (bubbles == null)
+      return;
     if (bubbles.length > options.bubbleCount)
       bubbles.removeRange(0, bubbles.length - options.bubbleCount);
     else if (bubbles.length < options.bubbleCount) {
@@ -248,7 +256,7 @@ class BubblesBehaviour extends Behaviour {
         if (bubble.popping)
           _initBubble(bubble);
         else
-          _popBubble(bubble);
+          _popBubble(bubble, false);
       }
     }
     return true;
@@ -274,7 +282,7 @@ class BubblesBehaviour extends Behaviour {
     for (var bubble in bubbles) {
       if ((bubble.position - localPosition).distanceSquared <
           bubble.radius * bubble.radius * 1.2) {
-        _popBubble(bubble);
+        _popBubble(bubble, true);
       }
     }
   }
