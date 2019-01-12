@@ -35,6 +35,14 @@ class SpaceBehaviour extends Behaviour {
   @protected
   List<Star> stars;
 
+  Color _backgroundColor;
+
+  SpaceBehaviour({
+    Color backgroundColor = const Color(0xFF000000),
+  }) : assert(backgroundColor != null) {
+    _backgroundColor = backgroundColor;
+  }
+
   @override
   void init() {
     center = Offset(size.width / 2.0, size.height / 2.0);
@@ -81,7 +89,7 @@ class SpaceBehaviour extends Behaviour {
     var canvas = context.canvas;
     var paint = Paint()..style = PaintingStyle.fill;
 
-    canvas.drawPaint(Paint()..color = Color(0xFF000000));
+    canvas.drawPaint(Paint()..color = _backgroundColor);
 
     canvas.translate(center.dx, center.dy);
     int i = 0;
