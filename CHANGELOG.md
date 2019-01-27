@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+## [1.0.1] - 2019/01/27
+### Added
+* Add onPop callback to BubblesBehaviour - #13
+* Add background color option for SpaceBehaviour - #15
+* Add EmptyBehaviour that draws nothing - #14
+
+### Changed
+* Update dependency packages
+
+### Fixed
+* Fix particles options update crash - #12
+
 ## [1.0.0] - 2018/07/31
 ### Added
 * New Space warp field behaviour and "fly child" experimental behaviour.

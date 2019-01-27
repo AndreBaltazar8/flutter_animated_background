@@ -14,7 +14,7 @@ Note: These examples are laggy because they were recorded from the emulator. Oth
 In your pubspec.yaml:
 ```yaml
 dependencies:
-  animated_background: ^1.0.0
+  animated_background: ^1.0.1
 ```
 
 ```dart
