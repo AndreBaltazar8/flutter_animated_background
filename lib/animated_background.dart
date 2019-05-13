@@ -129,7 +129,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
         debugWidgetBuilderValue(widget, built);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException(
-          'building $widget',
+            ErrorDescription('building $widget'),
           e,
           stack,
         ));
@@ -140,7 +140,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
         assert(_child != null);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException(
-          'building $widget',
+            ErrorDescription('building $widget'),
           e,
           stack,
         ));
@@ -150,7 +150,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 
   FlutterErrorDetails _debugReportException(
-    String context,
+    DiagnosticsNode context,
     exception,
     StackTrace stack,
   ) {

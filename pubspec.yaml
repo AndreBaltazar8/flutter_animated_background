@@ -1,11 +1,12 @@
 name: animated_background
 description: Animated Backgrounds for Flutter. Easily extended to paint whatever you want on the canvas.
-version: 1.0.1
+version: 1.0.2
 author: André Baltazar <me@andrebaltazar.com>
 homepage: https://github.com/AndreBaltazar8/flutter_animated_background
 
 environment:
-    sdk: ">=1.19.0 <3.0.0"
+  sdk: ">=1.19.0 <3.0.0"
+  flutter: ">1.5.8"
 
 dependencies:
   flutter:
