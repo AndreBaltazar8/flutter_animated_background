@@ -153,7 +153,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   final bool _useDiagnosticsNode = FlutterError('text') is Diagnosticable;
 
   dynamic _safeContext(String context) {
-    return _useDiagnosticsNode ? ErrorDescription(context) : context;
+    return _useDiagnosticsNode ? DiagnosticsNode.message(context) : context;
   }
 
   FlutterErrorDetails _debugReportException(

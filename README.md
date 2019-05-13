@@ -11,20 +11,13 @@ Note: These examples are laggy because they were recorded from the emulator. Oth
 
 ## How to use
 
-In your pubspec.yaml for versions of Flutter >1.5.9:
+In your pubspec.yaml:
 ```yaml
 dependencies:
-  animated_background: ^1.0.2
+  animated_background: ^1.0.4
 ```
 
-For older versions:
-
-```yaml
-dependencies:
-  animated_background: <1.0.2
-```
-
-In your .dart file:
+In your Dart file:
 ```dart
 import 'package:animated_background/animated_background.dart';
 ```

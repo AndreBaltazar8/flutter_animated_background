@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.0.4] - 2019/05/13
+### Fixed
+* Fix ErrorDescription not available in Flutter 1.5.8
+
 ## [1.0.3] - 2019/05/13
 ### Added
 * Add workaround to error handling to work on both stable and master.
