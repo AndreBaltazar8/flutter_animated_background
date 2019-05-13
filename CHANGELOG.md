@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.0.3] - 2019/05/13
+### Added
+* Add workaround to error handling to work on both stable and master.
+
 ## [1.0.2] - 2019/05/13
 ### Fixed
 * Fix arguments to FlutterErrorDetails class - #13

@@ -1,5 +1,6 @@
 library animated_background;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -129,7 +130,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
         debugWidgetBuilderValue(widget, built);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException(
-            ErrorDescription('building $widget'),
+          'building $widget',
           e,
           stack,
         ));
@@ -140,7 +141,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
         assert(_child != null);
       } catch (e, stack) {
         built = ErrorWidget.builder(_debugReportException(
-            ErrorDescription('building $widget'),
+          'building $widget',
           e,
           stack,
         ));
@@ -149,8 +150,14 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
     });
   }
 
+  final bool _useDiagnosticsNode = FlutterError('text') is Diagnosticable;
+
+  dynamic _safeContext(String context) {
+    return _useDiagnosticsNode ? ErrorDescription(context) : context;
+  }
+
   FlutterErrorDetails _debugReportException(
-    DiagnosticsNode context,
+    String context,
     exception,
     StackTrace stack,
   ) {
@@ -158,7 +165,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
       exception: exception,
       stack: stack,
       library: 'animated background library',
-      context: context,
+      context: _safeContext(context),
     );
 
     FlutterError.reportError(details);
