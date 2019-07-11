@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.0.5] - 2019/07/11
 ### Fixed
 * Fix compilation error on convert image helper.
 
