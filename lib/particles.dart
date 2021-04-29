@@ -22,7 +22,7 @@ class _NotSetImageProvider extends ImageProvider<_NotSetImageProvider> {
 /// Holds the particle configuration information for a [ParticleBehaviour].
 class ParticleOptions {
   /// The image used by the particle. It is mutually exclusive with [baseColor].
-  final Image image;
+  final Image? image;
 
   /// The color used by the particle. It is mutually exclusive with [image].
   final Color baseColor;
@@ -112,16 +112,16 @@ class ParticleOptions {
   /// replaced with new values.
   ParticleOptions copyWith({
     Image image = const _NotSetImage(),
-    Color baseColor,
-    double spawnMinRadius,
-    double spawnMaxRadius,
-    double spawnMinSpeed,
-    double spawnMaxSpeed,
-    double spawnOpacity,
-    double minOpacity,
-    double maxOpacity,
-    double opacityChangeRate,
-    int particleCount,
+    Color? baseColor,
+    double? spawnMinRadius,
+    double? spawnMaxRadius,
+    double? spawnMinSpeed,
+    double? spawnMaxSpeed,
+    double? spawnOpacity,
+    double? minOpacity,
+    double? maxOpacity,
+    double? opacityChangeRate,
+    int? particleCount,
   }) {
     return ParticleOptions(
       image: image is _NotSetImage ? this.image : image,
@@ -214,18 +214,18 @@ class Particle {
 abstract class ParticleBehaviour extends Behaviour {
   /// The list of particles used by the particle behaviour to hold the spawned particles.
   @protected
-  List<Particle> particles;
+  List<Particle>? particles;
 
   @override
   bool get isInitialized => particles != null;
 
-  Rect _particleImageSrc;
-  ui.Image _particleImage;
-  Function _pendingConversion;
+  Rect? _particleImageSrc;
+  ui.Image? _particleImage;
+  Function? _pendingConversion;
 
-  Paint _paint;
-  Paint get particlePaint => _paint;
-  set particlePaint(Paint value) {
+  Paint? _paint;
+  Paint? get particlePaint => _paint;
+  set particlePaint(Paint? value) {
     if (value == null) {
       _paint = Paint()
         ..strokeCap = StrokeCap.round
@@ -235,13 +235,13 @@ abstract class ParticleBehaviour extends Behaviour {
       _paint = value;
     }
 
-    if (_paint.strokeWidth <= 0) _paint.strokeWidth = 1.0;
+    if (_paint!.strokeWidth <= 0) _paint!.strokeWidth = 1.0;
   }
 
-  ParticleOptions _options;
+  ParticleOptions? _options;
 
   /// Gets the particle options used to configure this behaviour.
-  ParticleOptions get options => _options;
+  ParticleOptions get options => _options!;
 
   /// Set the particle options used to configure this behaviour.
   ///
@@ -249,13 +249,13 @@ abstract class ParticleBehaviour extends Behaviour {
   set options(ParticleOptions value) {
     assert(value != null);
     if (value == _options) return;
-    ParticleOptions oldOptions = _options;
+    ParticleOptions? oldOptions = _options;
     _options = value;
 
-    if (_options.image == null)
+    if (_options!.image == null)
       _particleImage = null;
-    else if (_particleImage == null || oldOptions.image != _options.image)
-      _convertImage(_options.image);
+    else if (_particleImage == null || oldOptions!.image != _options!.image)
+      _convertImage(_options!.image!);
 
     onOptionsUpdate(oldOptions);
   }
@@ -265,11 +265,11 @@ abstract class ParticleBehaviour extends Behaviour {
   /// Default values will be assigned to the parameters if not specified.
   ParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
-    Paint paint,
+    Paint? paint,
   }) : assert(options != null) {
     _options = options;
     this.particlePaint = paint;
-    if (options.image != null) _convertImage(options.image);
+    if (options.image != null) _convertImage(options.image!);
   }
 
   @override
@@ -296,8 +296,8 @@ abstract class ParticleBehaviour extends Behaviour {
   bool tick(double delta, Duration elapsed) {
     if (particles == null) return false;
 
-    for (Particle particle in particles) {
-      if (!size.contains(Offset(particle.cx, particle.cy))) {
+    for (Particle particle in particles!) {
+      if (!size!.contains(Offset(particle.cx, particle.cy))) {
         initParticle(particle);
         continue;
       }
@@ -311,9 +311,9 @@ abstract class ParticleBehaviour extends Behaviour {
   @override
   void paint(PaintingContext context, Offset offset) {
     final Canvas canvas = context.canvas;
-    for (Particle particle in particles) {
+    for (Particle particle in particles!) {
       if (particle.alpha == 0.0) continue;
-      _paint.color = options.baseColor.withOpacity(particle.alpha);
+      _paint!.color = options.baseColor.withOpacity(particle.alpha);
 
       if (_particleImage != null) {
         Rect dst = Rect.fromLTRB(
@@ -322,12 +322,12 @@ abstract class ParticleBehaviour extends Behaviour {
           particle.cx + particle.radius,
           particle.cy + particle.radius,
         );
-        canvas.drawImageRect(_particleImage, _particleImageSrc, dst, _paint);
+        canvas.drawImageRect(_particleImage!, _particleImageSrc!, dst, _paint!);
       } else
         canvas.drawCircle(
           Offset(particle.cx, particle.cy),
           particle.radius,
-          _paint,
+          _paint!,
         );
     }
   }
@@ -368,20 +368,20 @@ abstract class ParticleBehaviour extends Behaviour {
 
   @protected
   @mustCallSuper
-  void onOptionsUpdate(ParticleOptions oldOptions) {
+  void onOptionsUpdate(ParticleOptions? oldOptions) {
     if (particles == null)
       return;
-    if (particles.length > options.particleCount)
-      particles.removeRange(0, particles.length - options.particleCount);
-    else if (particles.length < options.particleCount) {
-      final int particlesToSpawn = options.particleCount - particles.length;
+    if (particles!.length > options.particleCount)
+      particles!.removeRange(0, particles!.length - options.particleCount);
+    else if (particles!.length < options.particleCount) {
+      final int particlesToSpawn = options.particleCount - particles!.length;
       final newParticles = generateParticles(particlesToSpawn);
-      particles.addAll(newParticles);
+      particles!.addAll(newParticles);
     }
   }
 
   void _convertImage(Image image) async {
-    if (_pendingConversion != null) _pendingConversion();
+    if (_pendingConversion != null) _pendingConversion!();
     _pendingConversion = convertImage(image, (ui.Image outImage) {
       _pendingConversion = null;
       if (outImage != null)
@@ -403,14 +403,14 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   /// Creates a new random particle behaviour.
   RandomParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
-    Paint paint,
+    Paint? paint,
   }) : super(options: options, paint: paint);
 
   @override
   void initFrom(Behaviour oldBehaviour) {
     super.initFrom(oldBehaviour);
     if (oldBehaviour is RandomParticleBehaviour || particles == null) return;
-    for (Particle particle in particles) {
+    for (Particle particle in particles!) {
       initParticle(particle);
     }
   }
@@ -432,8 +432,8 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   /// Initializes a new position for the provided [Particle].
   @protected
   void initPosition(Particle p) {
-    p.cx = random.nextDouble() * size.width;
-    p.cy = random.nextDouble() * size.height;
+    p.cx = random.nextDouble() * size!.width;
+    p.cy = random.nextDouble() * size!.height;
   }
 
   /// Initializes a new radius for the provided [Particle].
@@ -456,13 +456,13 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   }
 
   @override
-  void onOptionsUpdate(ParticleOptions oldOptions) {
+  void onOptionsUpdate(ParticleOptions? oldOptions) {
     super.onOptionsUpdate(oldOptions);
     double minSpeedSqr = options.spawnMinSpeed * options.spawnMinSpeed;
     double maxSpeedSqr = options.spawnMaxSpeed * options.spawnMaxSpeed;
     if (particles == null)
       return;
-    for (Particle p in particles) {
+    for (Particle p in particles!) {
       // speed assignment is better done this way, to prevent calculation of square roots if not needed
       double speedSqr = p.speedSqr;
       if (speedSqr > maxSpeedSqr)

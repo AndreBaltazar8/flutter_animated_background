@@ -6,13 +6,13 @@ import 'package:flutter/widgets.dart';
 /// Holds the information of a star used in a [SpaceBehaviour].
 class Star {
   /// The position of the star
-  Offset position;
+  Offset? position;
 
   /// The target position of the star
-  Offset targetPosition;
+  late Offset targetPosition;
 
   /// The distance of the start to the screen
-  double distance;
+  late double distance;
 }
 
 /// Renders a warp field on a [AnimatedBackground].
@@ -23,19 +23,19 @@ class SpaceBehaviour extends Behaviour {
 
   /// The center of the warp field.
   @protected
-  Offset center;
+  Offset? center;
 
   /// The target center of the warp field.
   ///
   /// Changing this value will cause the [center] to animate to this value.
   @protected
-  Offset targetCenter;
+  Offset? targetCenter;
 
   /// The list of stars spawned by the behaviour
   @protected
-  List<Star> stars;
+  List<Star>? stars;
 
-  Color _backgroundColor;
+  late Color _backgroundColor;
 
   SpaceBehaviour({
     Color backgroundColor = const Color(0xFF000000),
@@ -45,7 +45,7 @@ class SpaceBehaviour extends Behaviour {
 
   @override
   void init() {
-    center = Offset(size.width / 2.0, size.height / 2.0);
+    center = Offset(size!.width / 2.0, size!.height / 2.0);
     targetCenter = center;
     stars = List<Star>.generate(500, (_) {
       var star = Star();
@@ -56,8 +56,8 @@ class SpaceBehaviour extends Behaviour {
 
   void _initStar(Star star) {
     star.targetPosition = Offset(
-      (random.nextDouble() * size.width - size.width / 2) * 1000.0,
-      (random.nextDouble() * size.height - size.height / 2) * 1000.0,
+      (random.nextDouble() * size!.width - size!.width / 2) * 1000.0,
+      (random.nextDouble() * size!.height - size!.height / 2) * 1000.0,
     );
 
     if (star.position != null) {
@@ -91,11 +91,11 @@ class SpaceBehaviour extends Behaviour {
 
     canvas.drawPaint(Paint()..color = _backgroundColor);
 
-    canvas.translate(center.dx, center.dy);
+    canvas.translate(center!.dx, center!.dy);
     int i = 0;
     double time = DateTime.now().millisecondsSinceEpoch.toDouble() / 1000.0;
-    for (Star star in stars) {
-      if (star.position.dx == 0 || star.distance <= 0.0) continue;
+    for (Star star in stars!) {
+      if (star.position!.dx == 0 || star.distance <= 0.0) continue;
       paint.color = Color.fromARGB(
         0x80,
         (math.sin(0.3 * i + 0 + time) * 64.0 + 190.0).floor(),
@@ -109,26 +109,26 @@ class SpaceBehaviour extends Behaviour {
       paint.strokeWidth = z;
       canvas.drawLine(
         Offset(x, y),
-        star.position,
+        star.position!,
         paint,
       );
       i++;
     }
-    canvas.translate(-center.dx, -center.dy);
+    canvas.translate(-center!.dx, -center!.dy);
   }
 
   @override
   bool tick(double delta, Duration elapsed) {
     center = Offset.lerp(center, targetCenter, delta * 5.0);
-    for (Star star in stars) {
+    for (Star star in stars!) {
       star.position = Offset(
         star.targetPosition.dx / star.distance,
         star.targetPosition.dy / star.distance,
       );
       star.distance -= delta * 500;
       if (star.distance <= 0 ||
-          star.position.dx > size.width ||
-          star.position.dy > size.height) _initStar(star);
+          star.position!.dx > size!.width ||
+          star.position!.dy > size!.height) _initStar(star);
     }
     return true;
   }
@@ -150,7 +150,7 @@ class SpaceBehaviour extends Behaviour {
   }
 
   void _updateCenter(BuildContext context, Offset globalPosition) {
-    RenderBox renderBox = context.findRenderObject();
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
     var localPosition = renderBox.globalToLocal(globalPosition);
     targetCenter = localPosition;
   }
@@ -171,7 +171,7 @@ class ChildFlySpaceBehaviour extends SpaceBehaviour {
   bool tick(double delta, Duration elapsed) {
     if (_flying) {
       _childZ = math.max(0.0, _childZ - 50 * delta);
-      renderObject.markNeedsLayout();
+      renderObject!.markNeedsLayout();
       if (_childZ == 0.0) _flying = false;
     }
 
@@ -182,9 +182,9 @@ class ChildFlySpaceBehaviour extends SpaceBehaviour {
   Widget builder(
       BuildContext context, BoxConstraints constraints, Widget child) {
     double widgetX = 0.0, widgetY = 0.0;
-    if (renderObject.hasSize) {
-      widgetX = size.width / 2 * _childZ;
-      widgetY = size.height / 2 * _childZ;
+    if (renderObject!.hasSize) {
+      widgetX = size!.width / 2 * _childZ;
+      widgetY = size!.height / 2 * _childZ;
     }
 
     return Opacity(
