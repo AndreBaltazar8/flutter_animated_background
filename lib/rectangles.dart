@@ -53,7 +53,7 @@ class RectanglesBehaviour extends Behaviour {
           ..color = HSVColor.fromAHSV(0.0, 0.0, 0.0, 0.0)
           ..fadeTo = randomColor()
           ..rect = Offset(tileSize.width * x, tileSize.height * y) & tileSize;
-        _rectList![x * 4 + y] = rect;
+        _rectList!.insert(x * 4 + y, rect);
       }
     }
   }

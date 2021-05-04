@@ -111,7 +111,7 @@ class ParticleOptions {
   /// Creates a copy of this [ParticleOptions] but with the given fields
   /// replaced with new values.
   ParticleOptions copyWith({
-    Image image = const _NotSetImage(),
+    Image? image = const _NotSetImage(),
     Color? baseColor,
     double? spawnMinRadius,
     double? spawnMaxRadius,

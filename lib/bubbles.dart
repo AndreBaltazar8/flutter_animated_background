@@ -10,7 +10,7 @@ class Bubble {
   late Offset position;
 
   /// The radius of this bubble.
-  late double radius;
+  double? radius;
 
   /// The target radius of this bubble.
   late double targetRadius;
@@ -249,7 +249,7 @@ class BubblesBehaviour extends Behaviour {
   bool tick(double delta, Duration elapsed) {
     if (!isInitialized) return false;
     for (var bubble in bubbles!) {
-      bubble.radius +=
+      bubble.radius = bubble.radius! +
           delta * (bubble.popping ? options.popRate : options.growthRate);
 
       if (bubble.radius! >= bubble.targetRadius) {
