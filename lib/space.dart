@@ -1,8 +1,8 @@
-import 'dart:html';
 import 'dart:math' as math;
 
-import 'package:animated_background/animated_background.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+
+import 'animated_background.dart';
 
 /// Holds the information of a star used in a [SpaceBehaviour].
 class Star {

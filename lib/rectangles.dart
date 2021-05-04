@@ -28,7 +28,7 @@ class Rectangle {
 /// Renders rectangles on an [AnimatedBackground]
 class RectanglesBehaviour extends Behaviour {
   static math.Random random = math.Random();
-  List<Rectangle> _rectList = []..length = 4 * 4;
+  List<Rectangle>? _rectList = []..length = 4 * 4;
 
   @override
   bool get isInitialized => _rectList != null;
@@ -53,7 +53,7 @@ class RectanglesBehaviour extends Behaviour {
           ..color = HSVColor.fromAHSV(0.0, 0.0, 0.0, 0.0)
           ..fadeTo = randomColor()
           ..rect = Offset(tileSize.width * x, tileSize.height * y) & tileSize;
-        _rectList[x * 4 + y] = rect;
+        _rectList?[x * 4 + y] = rect;
       }
     }
   }
@@ -69,8 +69,8 @@ class RectanglesBehaviour extends Behaviour {
   void paint(PaintingContext context, Offset offset) {
     final Canvas canvas = context.canvas;
     final Paint rectPaint = Paint()..strokeWidth = 1.0;
-    for (Rectangle rect in _rectList) {
-      rectPaint.color = rect.color?.toColor() ?? Colors.white;
+    for (Rectangle rect in _rectList ?? []) {
+      rectPaint.color = rect.color.toColor();
       canvas.drawRect(rect.rect, rectPaint);
     }
   }
@@ -78,7 +78,7 @@ class RectanglesBehaviour extends Behaviour {
   @override
   bool tick(double delta, Duration elapsed) {
     if (_rectList == null) return false;
-    for (Rectangle rect in _rectList) {
+    for (Rectangle rect in _rectList ?? []) {
       rect.t = math.min(rect.t + delta * 0.5, 1.0);
 
       rect.color =
