@@ -48,12 +48,7 @@ class BubbleOptions {
     this.maxTargetRadius = 50.0,
     this.growthRate = 10.0,
     this.popRate = 150.0,
-  })  : assert(bubbleCount != null),
-        assert(minTargetRadius != null),
-        assert(maxTargetRadius != null),
-        assert(growthRate != null),
-        assert(popRate != null),
-        assert(bubbleCount >= 0),
+  })  : assert(bubbleCount >= 0),
         assert(minTargetRadius > 0),
         assert(maxTargetRadius > 0),
         assert(growthRate > 0),
@@ -100,7 +95,6 @@ class BubblesBehaviour extends Behaviour {
   ///
   /// Changing this value will cause the currently spawned bubbles to update.
   set options(BubbleOptions value) {
-    assert(value != null);
     if (value == _options) return;
     BubbleOptions? oldOptions = _options;
     _options = value;
@@ -114,7 +108,7 @@ class BubblesBehaviour extends Behaviour {
   BubblesBehaviour({
     BubbleOptions options = const BubbleOptions(),
     this.onPop,
-  }) : assert(options != null) {
+  }) {
     _options = options;
   }
 
@@ -152,14 +146,12 @@ class BubblesBehaviour extends Behaviour {
       bubble.radius = 0.0;
     }
 
-    bubble.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    bubble.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
     bubble.popping = false;
   }
 
@@ -167,8 +159,7 @@ class BubblesBehaviour extends Behaviour {
     bubble.popping = true;
     bubble.radius = 0.2 * bubble.targetRadius;
     bubble.targetRadius *= 0.5;
-    if (onPop != null)
-      onPop!(wasTap);
+    if (onPop != null) onPop!(wasTap);
   }
 
   @override
@@ -184,8 +175,7 @@ class BubblesBehaviour extends Behaviour {
   @protected
   @mustCallSuper
   void onOptionsUpdate(BubbleOptions? oldOptions) {
-    if (bubbles == null)
-      return;
+    if (bubbles == null) return;
     if (bubbles!.length > options.bubbleCount)
       bubbles!.removeRange(0, bubbles!.length - options.bubbleCount);
     else if (bubbles!.length < options.bubbleCount) {

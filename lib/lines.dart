@@ -1,5 +1,5 @@
-import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
 import 'package:meta/meta.dart';
@@ -42,9 +42,7 @@ class RacingLinesBehaviour extends Behaviour {
 
   /// Creates a new racing lines behaviour
   RacingLinesBehaviour({this.direction = LineDirection.Ltr, int numLines = 50})
-      : assert(direction != null),
-        assert(numLines != null),
-        assert(numLines >= 0) {
+      : assert(numLines >= 0) {
     _numLines = numLines;
   }
 
@@ -62,7 +60,8 @@ class RacingLinesBehaviour extends Behaviour {
     if (isInitialized) {
       if (value > lines!.length)
         lines!.addAll(generateLines(value - lines!.length));
-      else if (value < lines!.length) lines!.removeRange(0, lines!.length - value as int);
+      else if (value < lines!.length)
+        lines!.removeRange(0, lines!.length - value as int);
     }
     _numLines = value;
   }
@@ -108,14 +107,12 @@ class RacingLinesBehaviour extends Behaviour {
         ? Offset(spawnMainAxis, spawnCrossAxis)
         : Offset(spawnCrossAxis, spawnMainAxis);
     line.thickness = random.nextInt(2) + 2;
-    line.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    line.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
   }
 
   @override
@@ -169,14 +166,17 @@ class RacingLinesBehaviour extends Behaviour {
             : -1;
     if (axisHorizontal) {
       for (var line in lines!) {
-        line.position = line.position!.translate(delta * line.speed * sign, 0.0);
-        if ((direction == LineDirection.Ltr && line.position!.dx > size!.width) ||
+        line.position =
+            line.position!.translate(delta * line.speed * sign, 0.0);
+        if ((direction == LineDirection.Ltr &&
+                line.position!.dx > size!.width) ||
             (direction == LineDirection.Rtl && line.position!.dx < 0))
           initLine(line);
       }
     } else {
       for (var line in lines!) {
-        line.position = line.position!.translate(0.0, delta * line.speed * sign);
+        line.position =
+            line.position!.translate(0.0, delta * line.speed * sign);
         if ((direction == LineDirection.Ttb &&
                 line.position!.dy > size!.height) ||
             (direction == LineDirection.Btt && line.position!.dy < 0))

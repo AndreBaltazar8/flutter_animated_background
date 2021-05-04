@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:animated_background/animated_background.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import './helpers/fade_route.dart';
 import './views/space_splash.dart';
-import 'package:flutter/material.dart';
-
-import 'package:animated_background/animated_background.dart';
-import 'package:flutter/services.dart';
 
 void main() => runApp(new MyApp());
 
@@ -154,10 +154,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         SizedBox(height: 10.0),
         Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
         SizedBox(height: 10.0),
-      ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty())
-        ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty())
-        ..addAll(_behaviour is BubblesBehaviour ? _buildBubblesSettings() : Iterable.empty())
-        ..addAll(_behaviour is SpaceBehaviour ? _buildSpaceSettings() : Iterable.empty()),
+      ]
+        ..addAll(_behaviour is ParticleBehaviour
+            ? _buildParticleSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is RacingLinesBehaviour
+            ? _buildLinesSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is BubblesBehaviour
+            ? _buildBubblesSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is SpaceBehaviour
+            ? _buildSpaceSettings()
+            : Iterable.empty()),
     );
   }
 
@@ -275,7 +284,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 particleOptions = particleOptions.copyWith(
                   spawnMinRadius: value,
-                  spawnMaxRadius: math.max(particleOptions.spawnMaxRadius, value),
+                  spawnMaxRadius:
+                      math.max(particleOptions.spawnMaxRadius, value),
                 );
               });
             },
@@ -295,7 +305,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 particleOptions = particleOptions.copyWith(
                   spawnMaxRadius: value,
-                  spawnMinRadius: math.min(particleOptions.spawnMinRadius, value),
+                  spawnMinRadius:
+                      math.min(particleOptions.spawnMinRadius, value),
                 );
               });
             },
@@ -362,14 +373,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           children: <Widget>[
             Row(
               children: <Widget>[
-                _buildImageSelector(Image.asset('assets/images/star_stroke.png')),
+                _buildImageSelector(
+                    Image.asset('assets/images/star_stroke.png')),
                 _buildImageSelector(Image.asset('assets/images/icy_logo.png')),
                 RaisedButton(
                   child: Text('Clipboard'),
                   onPressed: () {
-                    Clipboard.getData('text/plain').then((ClipboardData? value) {
-                      if (value == null)
-                        return;
+                    Clipboard.getData('text/plain')
+                        .then((ClipboardData? value) {
+                      if (value == null) return;
                       setState(() {
                         _image = Image.network(value.text!);
                         particleOptions = particleOptions.copyWith(
@@ -392,7 +404,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               children: <Widget>[
                 Checkbox(
                   onChanged: (value) => setState(() {
-                    particlePaint.style = value! ? PaintingStyle.fill : PaintingStyle.stroke;
+                    particlePaint.style =
+                        value! ? PaintingStyle.fill : PaintingStyle.stroke;
                   }),
                   value: particlePaint.style == PaintingStyle.fill,
                 ),
@@ -407,7 +420,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   min: 1.0,
                   max: 50.0,
                   divisions: 49,
-                  onChanged: (value) => setState(() => particlePaint.strokeWidth = value),
+                  onChanged: (value) =>
+                      setState(() => particlePaint.strokeWidth = value),
                 ),
                 Text('${particlePaint.strokeWidth.toInt()}'),
               ],
@@ -425,8 +439,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             border: Border.all(
               width: 1.0,
-              color: _image.image == image.image ? Colors.amber : Colors
-                  .transparent,
+              color: _image.image == image.image
+                  ? Colors.amber
+                  : Colors.transparent,
             ),
           ),
           child: image,
@@ -471,7 +486,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             child: Text('Next Direction'),
             onPressed: () {
               setState(() {
-                _lineDirection = LineDirection.values[(_lineDirection.index + 1) % 4];
+                _lineDirection =
+                    LineDirection.values[(_lineDirection.index + 1) % 4];
               });
             },
           ),
@@ -516,7 +532,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 _bubbleOptions = _bubbleOptions.copyWith(
                   minTargetRadius: value,
-                  maxTargetRadius: math.max(_bubbleOptions.maxTargetRadius, value),
+                  maxTargetRadius:
+                      math.max(_bubbleOptions.maxTargetRadius, value),
                 );
               });
             },
@@ -536,7 +553,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 _bubbleOptions = _bubbleOptions.copyWith(
                   maxTargetRadius: value,
-                  minTargetRadius: math.min(_bubbleOptions.minTargetRadius, value),
+                  minTargetRadius:
+                      math.min(_bubbleOptions.minTargetRadius, value),
                 );
               });
             },
@@ -653,8 +671,7 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
     ParticleOptions options = const ParticleOptions(),
     Paint? paint,
     this.enabled = true,
-  }) : assert(options != null),
-        super(options: options, paint: paint);
+  }) : super(options: options, paint: paint);
 
   @override
   void initPosition(Particle p) {
@@ -677,12 +694,19 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
   }
 
   @override
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+  Widget builder(
+      BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
-      onPanUpdate: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
-      onTapDown: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
-      child: ConstrainedBox( // necessary to force gesture detector to cover screen
-        constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
+      onPanUpdate: enabled
+          ? (details) => _updateParticles(context, details.globalPosition)
+          : null,
+      onTapDown: enabled
+          ? (details) => _updateParticles(context, details.globalPosition)
+          : null,
+      child: ConstrainedBox(
+        // necessary to force gesture detector to cover screen
+        constraints: BoxConstraints(
+            minHeight: double.infinity, minWidth: double.infinity),
         child: super.builder(context, constraints, child),
       ),
     );
@@ -697,7 +721,8 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
         var speed = particle.speed;
         var mag = delta.distance;
         speed *= (70 - mag) / 70.0 * 2.0 + 0.5;
-        speed = math.max(options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
+        speed = math.max(
+            options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
         particle.dx = delta.dx / mag * speed;
         particle.dy = delta.dy / mag * speed;
       }

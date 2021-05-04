@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
+export 'bubbles.dart';
+export 'lines.dart';
 export 'particles.dart';
 export 'rectangles.dart';
-export 'lines.dart';
-export 'bubbles.dart';
 export 'space.dart';
 
 /// A widget that renders an animated background.
@@ -28,10 +28,7 @@ class AnimatedBackground extends RenderObjectWidget {
     required this.child,
     required this.vsync,
     required this.behaviour,
-  })  : assert(child != null),
-        assert(vsync != null),
-        assert(behaviour != null),
-        super(key: key);
+  }) : super(key: key);
 
   @override
   createRenderObject(BuildContext context) => RenderAnimatedBackground(
@@ -57,7 +54,8 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   AnimatedBackground get widget => super.widget as AnimatedBackground;
 
   @override
-  RenderAnimatedBackground get renderObject => super.renderObject as RenderAnimatedBackground;
+  RenderAnimatedBackground get renderObject =>
+      super.renderObject as RenderAnimatedBackground;
 
   Element? _child;
 
@@ -209,9 +207,7 @@ class RenderAnimatedBackground extends RenderProxyBox {
   RenderAnimatedBackground({
     required TickerProvider vsync,
     required Behaviour behaviour,
-  })  : assert(vsync != null),
-        assert(behaviour != null),
-        _vsync = vsync,
+  })   : _vsync = vsync,
         _behaviour = behaviour {
     _behaviour.renderObject = this;
   }
@@ -241,7 +237,6 @@ class RenderAnimatedBackground extends RenderProxyBox {
 
   @override
   void performLayout() {
-    assert(callback != null);
     invokeLayoutCallback(callback);
     if (child != null) child!.layout(constraints, parentUsesSize: true);
     size = constraints.biggest;

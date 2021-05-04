@@ -39,7 +39,7 @@ class SpaceBehaviour extends Behaviour {
 
   SpaceBehaviour({
     Color backgroundColor = const Color(0xFF000000),
-  }) : assert(backgroundColor != null) {
+  }) {
     _backgroundColor = backgroundColor;
   }
 

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'dart:ui' as ui;
 
 import 'animated_background.dart';
 import 'image_helper.dart';
@@ -16,6 +16,7 @@ class _NotSetImage extends Image {
 /// Dummy [ImageProvider] used by [_NotSetImage].
 class _NotSetImageProvider extends ImageProvider<_NotSetImageProvider> {
   const _NotSetImageProvider();
+
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -83,17 +84,7 @@ class ParticleOptions {
     this.maxOpacity = 0.4,
     this.opacityChangeRate = 0.25,
     this.particleCount = 100,
-  })  : assert(baseColor != null),
-        assert(spawnMinRadius != null),
-        assert(spawnMaxRadius != null),
-        assert(spawnMinSpeed != null),
-        assert(spawnMaxSpeed != null),
-        assert(spawnOpacity != null),
-        assert(minOpacity != null),
-        assert(maxOpacity != null),
-        assert(opacityChangeRate != null),
-        assert(particleCount != null),
-        assert(spawnMaxRadius >= spawnMinRadius),
+  })  : assert(spawnMaxRadius >= spawnMinRadius),
         assert(spawnMinRadius >= 1.0),
         assert(spawnMaxRadius >= 1.0),
         assert(spawnOpacity >= 0.0),
@@ -224,7 +215,9 @@ abstract class ParticleBehaviour extends Behaviour {
   Function? _pendingConversion;
 
   Paint? _paint;
+
   Paint? get particlePaint => _paint;
+
   set particlePaint(Paint? value) {
     if (value == null) {
       _paint = Paint()
@@ -247,7 +240,6 @@ abstract class ParticleBehaviour extends Behaviour {
   ///
   /// Changing this value will cause the currently spawned particles to update.
   set options(ParticleOptions value) {
-    assert(value != null);
     if (value == _options) return;
     ParticleOptions? oldOptions = _options;
     _options = value;
@@ -266,7 +258,7 @@ abstract class ParticleBehaviour extends Behaviour {
   ParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
     Paint? paint,
-  }) : assert(options != null) {
+  }) {
     _options = options;
     this.particlePaint = paint;
     if (options.image != null) _convertImage(options.image!);
@@ -369,8 +361,7 @@ abstract class ParticleBehaviour extends Behaviour {
   @protected
   @mustCallSuper
   void onOptionsUpdate(ParticleOptions? oldOptions) {
-    if (particles == null)
-      return;
+    if (particles == null) return;
     if (particles!.length > options.particleCount)
       particles!.removeRange(0, particles!.length - options.particleCount);
     else if (particles!.length < options.particleCount) {
@@ -384,13 +375,12 @@ abstract class ParticleBehaviour extends Behaviour {
     if (_pendingConversion != null) _pendingConversion!();
     _pendingConversion = convertImage(image, (ui.Image outImage) {
       _pendingConversion = null;
-      if (outImage != null)
-        _particleImageSrc = Rect.fromLTRB(
-          0.0,
-          0.0,
-          outImage.width.toDouble(),
-          outImage.height.toDouble(),
-        );
+      _particleImageSrc = Rect.fromLTRB(
+        0.0,
+        0.0,
+        outImage.width.toDouble(),
+        outImage.height.toDouble(),
+      );
       _particleImage = outImage;
     });
   }
@@ -460,8 +450,7 @@ class RandomParticleBehaviour extends ParticleBehaviour {
     super.onOptionsUpdate(oldOptions);
     double minSpeedSqr = options.spawnMinSpeed * options.spawnMinSpeed;
     double maxSpeedSqr = options.spawnMaxSpeed * options.spawnMaxSpeed;
-    if (particles == null)
-      return;
+    if (particles == null) return;
     for (Particle p in particles!) {
       // speed assignment is better done this way, to prevent calculation of square roots if not needed
       double speedSqr = p.speedSqr;
