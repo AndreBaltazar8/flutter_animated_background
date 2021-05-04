@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'animated_background.dart';
@@ -7,19 +8,19 @@ import 'animated_background.dart';
 /// Holds the information of a bubble used in a [BubblesBehaviour].
 class Bubble {
   /// The position of this bubble.
-  Offset position;
+  Offset position = Offset(0, 0);
 
   /// The radius of this bubble.
-  double radius;
+  double radius = 0;
 
   /// The target radius of this bubble.
-  double targetRadius;
+  double targetRadius = 0;
 
   /// The color of this bubble.
-  Color color;
+  Color color = Colors.transparent;
 
   /// The state of the bubble. Is it popping?
-  bool popping;
+  bool popping = false;
 }
 
 /// Holds the bubbles configuration information for a [BubblesBehaviour].
@@ -62,11 +63,11 @@ class BubbleOptions {
   /// Creates a copy of this [BubbleOptions] but with the given fields
   /// replaced with new values.
   BubbleOptions copyWith({
-    int bubbleCount,
-    double minTargetRadius,
-    double maxTargetRadius,
-    double growthRate,
-    double popRate,
+    int? bubbleCount,
+    double? minTargetRadius,
+    double? maxTargetRadius,
+    double? growthRate,
+    double? popRate,
   }) {
     return BubbleOptions(
       bubbleCount: bubbleCount ?? this.bubbleCount,
@@ -85,13 +86,13 @@ class BubblesBehaviour extends Behaviour {
   static const double sqrtInverse = 0.707;
 
   @protected
-  List<Bubble> bubbles;
-  double deltaTargetRadius;
+  late List<Bubble> bubbles;
+  double deltaTargetRadius = 0;
 
   /// Called when a bubble pops
-  Function(bool wasTap) onPop;
+  Function(bool wasTap)? onPop;
 
-  BubbleOptions _options;
+  late BubbleOptions _options;
 
   /// Gets the bubbles options used to configure this behaviour.
   BubbleOptions get options => _options;
@@ -152,14 +153,12 @@ class BubblesBehaviour extends Behaviour {
       bubble.radius = 0.0;
     }
 
-    bubble.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    bubble.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
     bubble.popping = false;
   }
 
@@ -167,8 +166,7 @@ class BubblesBehaviour extends Behaviour {
     bubble.popping = true;
     bubble.radius = 0.2 * bubble.targetRadius;
     bubble.targetRadius *= 0.5;
-    if (onPop != null)
-      onPop(wasTap);
+    if (onPop != null) onPop!(wasTap);
   }
 
   @override
@@ -184,8 +182,7 @@ class BubblesBehaviour extends Behaviour {
   @protected
   @mustCallSuper
   void onOptionsUpdate(BubbleOptions oldOptions) {
-    if (bubbles == null)
-      return;
+    if (bubbles == null) return;
     if (bubbles.length > options.bubbleCount)
       bubbles.removeRange(0, bubbles.length - options.bubbleCount);
     else if (bubbles.length < options.bubbleCount) {
@@ -277,8 +274,9 @@ class BubblesBehaviour extends Behaviour {
   }
 
   void _onTap(BuildContext context, Offset globalPosition) {
-    RenderBox renderBox = context.findRenderObject();
-    var localPosition = renderBox.globalToLocal(globalPosition);
+    RenderBox? renderBox = context.findAncestorRenderObjectOfType<RenderBox>();
+    var localPosition =
+        renderBox?.globalToLocal(globalPosition) ?? globalPosition;
     for (var bubble in bubbles) {
       if ((bubble.position - localPosition).distanceSquared <
           bubble.radius * bubble.radius * 1.2) {

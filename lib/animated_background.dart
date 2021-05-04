@@ -24,11 +24,11 @@ class AnimatedBackground extends RenderObjectWidget {
 
   /// Creates a new animated background with the provided arguments
   AnimatedBackground({
-    Key key,
-    @required this.child,
-    @required this.vsync,
-    @required this.behaviour,
-  })  : assert(child != null),
+    Key? key,
+    required this.child,
+    required this.vsync,
+    required this.behaviour,
+  })   : assert(child != null),
         assert(vsync != null),
         assert(behaviour != null),
         super(key: key);
@@ -51,15 +51,15 @@ class AnimatedBackground extends RenderObjectWidget {
 }
 
 class _AnimatedBackgroundElement extends RenderObjectElement {
+  Element? _child;
   _AnimatedBackgroundElement(AnimatedBackground widget) : super(widget);
 
   @override
-  AnimatedBackground get widget => super.widget;
+  AnimatedBackground get widget => super.widget as AnimatedBackground;
 
   @override
-  RenderAnimatedBackground get renderObject => super.renderObject;
-
-  Element _child;
+  RenderAnimatedBackground get renderObject =>
+      super.renderObject as RenderAnimatedBackground;
 
   @override
   void forgetChild(Element child) {
@@ -92,11 +92,11 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void visitChildren(ElementVisitor visitor) {
-    if (_child != null) visitor(_child);
+    if (_child != null) visitor(_child!);
   }
 
   @override
-  void mount(Element parent, newSlot) {
+  void mount(Element? parent, newSlot) {
     super.mount(parent, newSlot);
     renderObject.callback = _layoutCallback;
   }
@@ -123,7 +123,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 
   void _layoutCallback(BoxConstraints constraints) {
-    owner.buildScope(this, () {
+    owner!.buildScope(this, () {
       Widget built;
       try {
         built = widget.behaviour.builder(this, constraints, widget.child);
@@ -177,7 +177,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 class RenderAnimatedBackground extends RenderProxyBox {
   int _lastTimeMs = 0;
   TickerProvider _vsync;
-  Ticker _ticker;
+  Ticker? _ticker;
 
   Behaviour _behaviour;
 
@@ -195,11 +195,11 @@ class RenderAnimatedBackground extends RenderProxyBox {
   }
 
   /// Gets the layout callback that should be called when performing layout.
-  LayoutCallback<BoxConstraints> get callback => _callback;
-  LayoutCallback<BoxConstraints> _callback;
+  LayoutCallback<BoxConstraints>? get callback => _callback;
+  LayoutCallback<BoxConstraints>? _callback;
 
   /// Sets the layout callback that should be called when performing layout.
-  set callback(LayoutCallback<BoxConstraints> value) {
+  set callback(LayoutCallback<BoxConstraints>? value) {
     if (value == _callback) return;
     _callback = value;
     markNeedsLayout();
@@ -207,9 +207,9 @@ class RenderAnimatedBackground extends RenderProxyBox {
 
   /// Creates a new render for animated background with the provided arguments.
   RenderAnimatedBackground({
-    @required TickerProvider vsync,
-    @required Behaviour behaviour,
-  })  : assert(vsync != null),
+    required TickerProvider vsync,
+    required Behaviour behaviour,
+  })   : assert(vsync != null),
         assert(behaviour != null),
         _vsync = vsync,
         _behaviour = behaviour {
@@ -220,13 +220,13 @@ class RenderAnimatedBackground extends RenderProxyBox {
   void attach(PipelineOwner owner) {
     _lastTimeMs = 0;
     _ticker = _vsync.createTicker(_tick);
-    _ticker.start();
+    _ticker?.start();
     super.attach(owner);
   }
 
   @override
   void detach() {
-    _ticker.dispose();
+    _ticker?.dispose();
     super.detach();
   }
 
@@ -242,8 +242,8 @@ class RenderAnimatedBackground extends RenderProxyBox {
   @override
   void performLayout() {
     assert(callback != null);
-    invokeLayoutCallback(callback);
-    if (child != null) child.layout(constraints, parentUsesSize: true);
+    invokeLayoutCallback(callback!);
+    if (child != null) child!.layout(constraints, parentUsesSize: true);
     size = constraints.biggest;
   }
 
@@ -266,11 +266,11 @@ class RenderAnimatedBackground extends RenderProxyBox {
 abstract class Behaviour {
   /// The render object of the [AnimatedBackground] this behaviour is provided to.
   @protected
-  RenderAnimatedBackground renderObject;
+  RenderAnimatedBackground? renderObject;
 
   /// The size of the render object of the [AnimatedBackground] this behaviour is provided to.
   @protected
-  Size get size => renderObject?.size;
+  Size get size => renderObject?.size ?? Size(0, 0);
 
   /// Gets the initialization state of this behaviour
   bool get isInitialized;
@@ -318,7 +318,7 @@ abstract class Behaviour {
 
 /// Empty Behaviour that renders nothing on an [AnimatedBackground]
 class EmptyBehaviour extends Behaviour {
-  static EmptyBehaviour _empty;
+  static EmptyBehaviour? _empty;
 
   EmptyBehaviour._();
 

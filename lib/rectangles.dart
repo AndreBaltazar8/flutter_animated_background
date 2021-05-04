@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'animated_background.dart';
@@ -9,25 +10,25 @@ import 'animated_background.dart';
 /// Holds the information of a rectangle used in a [RectanglesBehaviour].
 class Rectangle {
   /// The current color of this rectangle
-  HSVColor color;
+  HSVColor color = HSVColor.fromColor(Colors.transparent);
 
   /// The initial color of this rectangle
-  HSVColor initialColor;
+  HSVColor initialColor = HSVColor.fromColor(Colors.transparent);
 
   /// The color this rectangle will fade to.
-  HSVColor fadeTo;
+  HSVColor fadeTo = HSVColor.fromColor(Colors.transparent);
 
   /// The interpolator between the [initialColor] and [fadeTo]
   double t = 0.0;
 
   /// The rectangle size and position
-  Rect rect;
+  Rect rect = Rect.fromCenter(center: Offset(0, 0), width: 0, height: 0);
 }
 
 /// Renders rectangles on an [AnimatedBackground]
 class RectanglesBehaviour extends Behaviour {
   static math.Random random = math.Random();
-  List<Rectangle> _rectList;
+  List<Rectangle> _rectList = []..length = 4 * 4;
 
   @override
   bool get isInitialized => _rectList != null;
@@ -44,7 +45,6 @@ class RectanglesBehaviour extends Behaviour {
 
   @override
   void init() {
-    _rectList = new List(4 * 4);
     Size tileSize = size / 4.0;
     for (int x = 0; x < 4; ++x) {
       for (int y = 0; y < 4; ++y) {
@@ -70,7 +70,7 @@ class RectanglesBehaviour extends Behaviour {
     final Canvas canvas = context.canvas;
     final Paint rectPaint = Paint()..strokeWidth = 1.0;
     for (Rectangle rect in _rectList) {
-      rectPaint.color = rect.color.toColor();
+      rectPaint.color = rect.color?.toColor() ?? Colors.white;
       canvas.drawRect(rect.rect, rectPaint);
     }
   }
@@ -81,7 +81,8 @@ class RectanglesBehaviour extends Behaviour {
     for (Rectangle rect in _rectList) {
       rect.t = math.min(rect.t + delta * 0.5, 1.0);
 
-      rect.color = HSVColor.lerp(rect.initialColor, rect.fadeTo, rect.t);
+      rect.color =
+          HSVColor.lerp(rect.initialColor, rect.fadeTo, rect.t) ?? rect.color;
       if (rect.fadeTo.toColor().value == rect.color.toColor().value) {
         rect.initialColor = rect.fadeTo;
         rect.fadeTo = randomColor();

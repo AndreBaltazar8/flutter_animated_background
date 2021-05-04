@@ -1,3 +1,4 @@
+import 'dart:html';
 import 'dart:math' as math;
 
 import 'package:animated_background/animated_background.dart';
@@ -6,13 +7,13 @@ import 'package:flutter/widgets.dart';
 /// Holds the information of a star used in a [SpaceBehaviour].
 class Star {
   /// The position of the star
-  Offset position;
+  Offset position = Offset(0, 0);
 
   /// The target position of the star
-  Offset targetPosition;
+  Offset targetPosition = Offset(0, 0);
 
   /// The distance of the start to the screen
-  double distance;
+  double distance = 0;
 }
 
 /// Renders a warp field on a [AnimatedBackground].
@@ -23,19 +24,19 @@ class SpaceBehaviour extends Behaviour {
 
   /// The center of the warp field.
   @protected
-  Offset center;
+  late Offset center;
 
   /// The target center of the warp field.
   ///
   /// Changing this value will cause the [center] to animate to this value.
   @protected
-  Offset targetCenter;
+  late Offset targetCenter;
 
   /// The list of stars spawned by the behaviour
   @protected
-  List<Star> stars;
+  late List<Star> stars;
 
-  Color _backgroundColor;
+  late Color _backgroundColor;
 
   SpaceBehaviour({
     Color backgroundColor = const Color(0xFF000000),
@@ -119,7 +120,7 @@ class SpaceBehaviour extends Behaviour {
 
   @override
   bool tick(double delta, Duration elapsed) {
-    center = Offset.lerp(center, targetCenter, delta * 5.0);
+    center = Offset.lerp(center, targetCenter, delta * 5.0) ?? center;
     for (Star star in stars) {
       star.position = Offset(
         star.targetPosition.dx / star.distance,
@@ -150,9 +151,9 @@ class SpaceBehaviour extends Behaviour {
   }
 
   void _updateCenter(BuildContext context, Offset globalPosition) {
-    RenderBox renderBox = context.findRenderObject();
-    var localPosition = renderBox.globalToLocal(globalPosition);
-    targetCenter = localPosition;
+    RenderBox? renderBox = context.findAncestorRenderObjectOfType<RenderBox>();
+    var localPosition = renderBox?.globalToLocal(globalPosition);
+    targetCenter = localPosition ?? globalPosition;
   }
 }
 
@@ -171,7 +172,7 @@ class ChildFlySpaceBehaviour extends SpaceBehaviour {
   bool tick(double delta, Duration elapsed) {
     if (_flying) {
       _childZ = math.max(0.0, _childZ - 50 * delta);
-      renderObject.markNeedsLayout();
+      renderObject?.markNeedsLayout();
       if (_childZ == 0.0) _flying = false;
     }
 
@@ -182,7 +183,7 @@ class ChildFlySpaceBehaviour extends SpaceBehaviour {
   Widget builder(
       BuildContext context, BoxConstraints constraints, Widget child) {
     double widgetX = 0.0, widgetY = 0.0;
-    if (renderObject.hasSize) {
+    if (renderObject?.hasSize == true) {
       widgetX = size.width / 2 * _childZ;
       widgetY = size.height / 2 * _childZ;
     }

@@ -11,9 +11,9 @@ import 'package:flutter/widgets.dart' as widget;
 /// needed before the callback is called.
 Function() convertImage(widget.Image image, Function(ui.Image) callback) {
   final ImageStream newStream = image.image.resolve(ImageConfiguration.empty);
-  ImageStreamListener imageListener;
+  late ImageStreamListener imageListener;
   imageListener = ImageStreamListener((ImageInfo info, bool synchronousCall) {
-    callback(info?.image);
+    callback(info.image);
     newStream.removeListener(imageListener);
   });
   newStream.addListener(imageListener);

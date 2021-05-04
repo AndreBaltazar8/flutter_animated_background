@@ -9,16 +9,16 @@ import 'animated_background.dart';
 /// Holds the information of a line used in a [RacingLinesBehaviour].
 class Line {
   /// The position of the start of this line.
-  Offset position;
+  late Offset position;
 
   /// The speed of this line.
-  double speed;
+  late double speed;
 
   /// The thickness of this line.
-  int thickness;
+  late int thickness;
 
   /// The color of this line.
-  Color color;
+  late Color color;
 }
 
 /// The direction in which the lines should move
@@ -50,9 +50,9 @@ class RacingLinesBehaviour extends Behaviour {
 
   /// The list of lines used by the behaviour to hold the spawned lines.
   @protected
-  List<Line> lines;
+  late List<Line> lines;
 
-  int _numLines;
+  late int _numLines;
 
   /// Gets the number of lines in the background.
   int get numLines => _numLines;
@@ -62,7 +62,9 @@ class RacingLinesBehaviour extends Behaviour {
     if (isInitialized) {
       if (value > lines.length)
         lines.addAll(generateLines(value - lines.length));
-      else if (value < lines.length) lines.removeRange(0, lines.length - value);
+      else if (value < lines.length) {
+        lines.removeRange(0, (lines.length - value).toInt());
+      }
     }
     _numLines = value;
   }
@@ -108,14 +110,12 @@ class RacingLinesBehaviour extends Behaviour {
         ? Offset(spawnMainAxis, spawnCrossAxis)
         : Offset(spawnCrossAxis, spawnMainAxis);
     line.thickness = random.nextInt(2) + 2;
-    line.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    line.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
   }
 
   @override
