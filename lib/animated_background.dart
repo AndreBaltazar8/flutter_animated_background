@@ -61,12 +61,13 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void forgetChild(Element child) {
+    super.forgetChild(child);
     assert(child == _child);
     _child = null;
   }
-
+  
   @override
-  void insertChildRenderObject(RenderObject child, slot) {
+  void insertRenderObjectChild(RenderObject child, slot) {
     final RenderObjectWithChildMixin<RenderObject> renderObject =
         this.renderObject;
     assert(slot == null);
@@ -76,12 +77,11 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 
   @override
-  void moveChildRenderObject(RenderObject child, slot) {
+  void moveRenderObjectChild(RenderObject child, oldSlot, newSlot) {
     assert(false);
   }
-
   @override
-  void removeChildRenderObject(RenderObject child) {
+  void removeRenderObjectChild(RenderObject child, slot) {
     final RenderAnimatedBackground renderObject = this.renderObject;
     assert(renderObject.child == child);
     renderObject.child = null;

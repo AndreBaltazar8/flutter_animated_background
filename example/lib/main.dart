@@ -16,6 +16,11 @@ class MyApp extends StatelessWidget {
       title: 'Animated Background Demo',
       theme: new ThemeData(
         primarySwatch: Colors.blue,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+          onPrimary: Colors.black,
+          primary: Color(0xffe0e0e0),
+        )),
       ),
       home: new MyHomePage(title: 'Animated Background Demo'),
     );
@@ -139,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       children: <Widget>[
         Row(
           children: <Widget>[
-            RaisedButton(
+            ElevatedButton(
               child: Text('Next'),
               onPressed: () {
                 setState(() {
@@ -190,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '${particleOptions.particleCount}',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
@@ -367,7 +372,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildTypeSettings() {
-    switch (_particleType) {
+    switch (_particleType!) {
       case ParticleType.Image:
         return Column(
           children: <Widget>[
@@ -376,7 +381,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 _buildImageSelector(
                     Image.asset('assets/images/star_stroke.png')),
                 _buildImageSelector(Image.asset('assets/images/icy_logo.png')),
-                RaisedButton(
+                ElevatedButton(
                   child: Text('Clipboard'),
                   onPressed: () {
                     Clipboard.getData('text/plain')
@@ -429,7 +434,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ],
         );
     }
-    return Container();
   }
 
   Widget _buildImageSelector(Image image) {
@@ -476,13 +480,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '$_lineCount',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
       Row(
         children: <Widget>[
-          RaisedButton(
+          ElevatedButton(
             child: Text('Next Direction'),
             onPressed: () {
               setState(() {
@@ -516,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '${_bubbleOptions.bubbleCount}',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
@@ -607,7 +611,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return <Widget>[
       Row(
         children: <Widget>[
-          RaisedButton(
+          ElevatedButton(
             child: Text('Launch Example Splash'),
             onPressed: () {
               setState(() {
