@@ -5,12 +5,12 @@ author: André Baltazar <me@andrebaltazar.com>
 homepage: https://github.com/AndreBaltazar8/flutter_animated_background
 
 environment:
-  sdk: ">=1.19.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  meta: ^1.1.5
+  meta: ^1.3.0
 
 dev_dependencies:
   flutter_test:

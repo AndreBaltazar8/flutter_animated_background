@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:animated_background/animated_background.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import './helpers/fade_route.dart';
 import './views/space_splash.dart';
-import 'package:flutter/material.dart';
-
-import 'package:animated_background/animated_background.dart';
-import 'package:flutter/services.dart';
 
 void main() => runApp(new MyApp());
 
@@ -16,6 +16,11 @@ class MyApp extends StatelessWidget {
       title: 'Animated Background Demo',
       theme: new ThemeData(
         primarySwatch: Colors.blue,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+          onPrimary: Colors.black,
+          primary: Color(0xffe0e0e0),
+        )),
       ),
       home: new MyHomePage(title: 'Animated Background Demo'),
     );
@@ -23,9 +28,9 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title}) : super(key: key);
 
-  final String title;
+  final String? title;
 
   @override
   _MyHomePageState createState() => new _MyHomePageState();
@@ -35,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   static const numBehaviours = 6;
 
   // Particles
-  ParticleType _particleType = ParticleType.Image;
+  ParticleType? _particleType = ParticleType.Image;
   Image _image = Image.asset('assets/images/star_stroke.png');
 
   ParticleOptions particleOptions = ParticleOptions(
@@ -66,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   // General Variables
   int _behaviourIndex = 0;
-  Behaviour _behaviour;
+  Behaviour? _behaviour;
 
   bool _showSettings = false;
 
@@ -74,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.title!),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.settings_input_component),
@@ -100,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _onTypeChange(ParticleType type) {
+  void _onTypeChange(ParticleType? type) {
     setState(() {
       _particleType = type;
       if (_particleType == ParticleType.Image) {
@@ -139,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       children: <Widget>[
         Row(
           children: <Widget>[
-            RaisedButton(
+            ElevatedButton(
               child: Text('Next'),
               onPressed: () {
                 setState(() {
@@ -154,10 +159,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         SizedBox(height: 10.0),
         Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
         SizedBox(height: 10.0),
-      ]..addAll(_behaviour is ParticleBehaviour ? _buildParticleSettings() : Iterable.empty())
-        ..addAll(_behaviour is RacingLinesBehaviour ? _buildLinesSettings() : Iterable.empty())
-        ..addAll(_behaviour is BubblesBehaviour ? _buildBubblesSettings() : Iterable.empty())
-        ..addAll(_behaviour is SpaceBehaviour ? _buildSpaceSettings() : Iterable.empty()),
+      ]
+        ..addAll(_behaviour is ParticleBehaviour
+            ? _buildParticleSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is RacingLinesBehaviour
+            ? _buildLinesSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is BubblesBehaviour
+            ? _buildBubblesSettings()
+            : Iterable.empty())
+        ..addAll(_behaviour is SpaceBehaviour
+            ? _buildSpaceSettings()
+            : Iterable.empty()),
     );
   }
 
@@ -181,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '${particleOptions.particleCount}',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
@@ -275,7 +289,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 particleOptions = particleOptions.copyWith(
                   spawnMinRadius: value,
-                  spawnMaxRadius: math.max(particleOptions.spawnMaxRadius, value),
+                  spawnMaxRadius:
+                      math.max(particleOptions.spawnMaxRadius, value),
                 );
               });
             },
@@ -295,7 +310,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 particleOptions = particleOptions.copyWith(
                   spawnMaxRadius: value,
-                  spawnMinRadius: math.min(particleOptions.spawnMinRadius, value),
+                  spawnMinRadius:
+                      math.min(particleOptions.spawnMinRadius, value),
                 );
               });
             },
@@ -356,22 +372,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildTypeSettings() {
-    switch (_particleType) {
+    switch (_particleType!) {
       case ParticleType.Image:
         return Column(
           children: <Widget>[
             Row(
               children: <Widget>[
-                _buildImageSelector(Image.asset('assets/images/star_stroke.png')),
+                _buildImageSelector(
+                    Image.asset('assets/images/star_stroke.png')),
                 _buildImageSelector(Image.asset('assets/images/icy_logo.png')),
-                RaisedButton(
+                ElevatedButton(
                   child: Text('Clipboard'),
                   onPressed: () {
-                    Clipboard.getData('text/plain').then((ClipboardData value) {
-                      if (value == null)
-                        return;
+                    Clipboard.getData('text/plain')
+                        .then((ClipboardData? value) {
+                      if (value == null) return;
                       setState(() {
-                        _image = Image.network(value.text);
+                        _image = Image.network(value.text!);
                         particleOptions = particleOptions.copyWith(
                           image: _image,
                         );
@@ -392,7 +409,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               children: <Widget>[
                 Checkbox(
                   onChanged: (value) => setState(() {
-                    particlePaint.style = value ? PaintingStyle.fill : PaintingStyle.stroke;
+                    particlePaint.style =
+                        value! ? PaintingStyle.fill : PaintingStyle.stroke;
                   }),
                   value: particlePaint.style == PaintingStyle.fill,
                 ),
@@ -407,7 +425,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   min: 1.0,
                   max: 50.0,
                   divisions: 49,
-                  onChanged: (value) => setState(() => particlePaint.strokeWidth = value),
+                  onChanged: (value) =>
+                      setState(() => particlePaint.strokeWidth = value),
                 ),
                 Text('${particlePaint.strokeWidth.toInt()}'),
               ],
@@ -415,7 +434,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ],
         );
     }
-    return Container();
   }
 
   Widget _buildImageSelector(Image image) {
@@ -425,8 +443,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             border: Border.all(
               width: 1.0,
-              color: _image.image == image.image ? Colors.amber : Colors
-                  .transparent,
+              color: _image.image == image.image
+                  ? Colors.amber
+                  : Colors.transparent,
             ),
           ),
           child: image,
@@ -461,17 +480,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '$_lineCount',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
       Row(
         children: <Widget>[
-          RaisedButton(
+          ElevatedButton(
             child: Text('Next Direction'),
             onPressed: () {
               setState(() {
-                _lineDirection = LineDirection.values[(_lineDirection.index + 1) % 4];
+                _lineDirection =
+                    LineDirection.values[(_lineDirection.index + 1) % 4];
               });
             },
           ),
@@ -500,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           Text(
             '${_bubbleOptions.bubbleCount}',
-            style: Theme.of(context).textTheme.display1,
+            style: Theme.of(context).textTheme.headline4,
           ),
         ],
       ),
@@ -516,7 +536,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 _bubbleOptions = _bubbleOptions.copyWith(
                   minTargetRadius: value,
-                  maxTargetRadius: math.max(_bubbleOptions.maxTargetRadius, value),
+                  maxTargetRadius:
+                      math.max(_bubbleOptions.maxTargetRadius, value),
                 );
               });
             },
@@ -536,7 +557,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               setState(() {
                 _bubbleOptions = _bubbleOptions.copyWith(
                   maxTargetRadius: value,
-                  minTargetRadius: math.min(_bubbleOptions.minTargetRadius, value),
+                  minTargetRadius:
+                      math.min(_bubbleOptions.minTargetRadius, value),
                 );
               });
             },
@@ -589,7 +611,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return <Widget>[
       Row(
         children: <Widget>[
-          RaisedButton(
+          ElevatedButton(
             child: Text('Launch Example Splash'),
             onPressed: () {
               setState(() {
@@ -651,18 +673,17 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
 
   RainParticleBehaviour({
     ParticleOptions options = const ParticleOptions(),
-    Paint paint,
+    Paint? paint,
     this.enabled = true,
-  }) : assert(options != null),
-        super(options: options, paint: paint);
+  }) : super(options: options, paint: paint);
 
   @override
   void initPosition(Particle p) {
-    p.cx = random.nextDouble() * size.width;
+    p.cx = random.nextDouble() * size!.width;
     if (p.cy == 0.0)
-      p.cy = random.nextDouble() * size.height;
+      p.cy = random.nextDouble() * size!.height;
     else
-      p.cy = random.nextDouble() * size.width * 0.2;
+      p.cy = random.nextDouble() * size!.width * 0.2;
   }
 
   @override
@@ -677,12 +698,19 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
   }
 
   @override
-  Widget builder(BuildContext context, BoxConstraints constraints, Widget child) {
+  Widget builder(
+      BuildContext context, BoxConstraints constraints, Widget child) {
     return GestureDetector(
-      onPanUpdate: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
-      onTapDown: enabled ? (details) => _updateParticles(context, details.globalPosition) : null,
-      child: ConstrainedBox( // necessary to force gesture detector to cover screen
-        constraints: BoxConstraints(minHeight: double.infinity, minWidth: double.infinity),
+      onPanUpdate: enabled
+          ? (details) => _updateParticles(context, details.globalPosition)
+          : null,
+      onTapDown: enabled
+          ? (details) => _updateParticles(context, details.globalPosition)
+          : null,
+      child: ConstrainedBox(
+        // necessary to force gesture detector to cover screen
+        constraints: BoxConstraints(
+            minHeight: double.infinity, minWidth: double.infinity),
         child: super.builder(context, constraints, child),
       ),
     );
@@ -691,13 +719,14 @@ class RainParticleBehaviour extends RandomParticleBehaviour {
   void _updateParticles(BuildContext context, Offset offsetGlobal) {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var offset = renderBox.globalToLocal(offsetGlobal);
-    particles.forEach((particle) {
+    particles!.forEach((particle) {
       var delta = (Offset(particle.cx, particle.cy) - offset);
       if (delta.distanceSquared < 70 * 70) {
         var speed = particle.speed;
         var mag = delta.distance;
         speed *= (70 - mag) / 70.0 * 2.0 + 0.5;
-        speed = math.max(options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
+        speed = math.max(
+            options.spawnMinSpeed, math.min(options.spawnMaxSpeed, speed));
         particle.dx = delta.dx / mag * speed;
         particle.dy = delta.dy / mag * speed;
       }

@@ -7,19 +7,19 @@ import 'animated_background.dart';
 /// Holds the information of a bubble used in a [BubblesBehaviour].
 class Bubble {
   /// The position of this bubble.
-  Offset position;
+  late Offset position;
 
   /// The radius of this bubble.
-  double radius;
+  double? radius;
 
   /// The target radius of this bubble.
-  double targetRadius;
+  late double targetRadius;
 
   /// The color of this bubble.
-  Color color;
+  Color? color;
 
   /// The state of the bubble. Is it popping?
-  bool popping;
+  late bool popping;
 }
 
 /// Holds the bubbles configuration information for a [BubblesBehaviour].
@@ -48,12 +48,7 @@ class BubbleOptions {
     this.maxTargetRadius = 50.0,
     this.growthRate = 10.0,
     this.popRate = 150.0,
-  })  : assert(bubbleCount != null),
-        assert(minTargetRadius != null),
-        assert(maxTargetRadius != null),
-        assert(growthRate != null),
-        assert(popRate != null),
-        assert(bubbleCount >= 0),
+  })  : assert(bubbleCount >= 0),
         assert(minTargetRadius > 0),
         assert(maxTargetRadius > 0),
         assert(growthRate > 0),
@@ -62,11 +57,11 @@ class BubbleOptions {
   /// Creates a copy of this [BubbleOptions] but with the given fields
   /// replaced with new values.
   BubbleOptions copyWith({
-    int bubbleCount,
-    double minTargetRadius,
-    double maxTargetRadius,
-    double growthRate,
-    double popRate,
+    int? bubbleCount,
+    double? minTargetRadius,
+    double? maxTargetRadius,
+    double? growthRate,
+    double? popRate,
   }) {
     return BubbleOptions(
       bubbleCount: bubbleCount ?? this.bubbleCount,
@@ -85,24 +80,23 @@ class BubblesBehaviour extends Behaviour {
   static const double sqrtInverse = 0.707;
 
   @protected
-  List<Bubble> bubbles;
-  double deltaTargetRadius;
+  List<Bubble>? bubbles;
+  double? deltaTargetRadius;
 
   /// Called when a bubble pops
-  Function(bool wasTap) onPop;
+  Function(bool wasTap)? onPop;
 
-  BubbleOptions _options;
+  BubbleOptions? _options;
 
   /// Gets the bubbles options used to configure this behaviour.
-  BubbleOptions get options => _options;
+  BubbleOptions get options => _options!;
 
   /// Set the bubble options used to configure this behaviour.
   ///
   /// Changing this value will cause the currently spawned bubbles to update.
   set options(BubbleOptions value) {
-    assert(value != null);
     if (value == _options) return;
-    BubbleOptions oldOptions = _options;
+    BubbleOptions? oldOptions = _options;
     _options = value;
 
     onOptionsUpdate(oldOptions);
@@ -114,7 +108,7 @@ class BubblesBehaviour extends Behaviour {
   BubblesBehaviour({
     BubbleOptions options = const BubbleOptions(),
     this.onPop,
-  }) : assert(options != null) {
+  }) {
     _options = options;
   }
 
@@ -138,8 +132,8 @@ class BubblesBehaviour extends Behaviour {
 
   void _initBubble(Bubble bubble) {
     bubble.position = Offset(
-      random.nextDouble() * size.width,
-      random.nextDouble() * size.height,
+      random.nextDouble() * size!.width,
+      random.nextDouble() * size!.height,
     );
 
     var deltaTargetRadius = options.maxTargetRadius - options.minTargetRadius;
@@ -152,14 +146,12 @@ class BubblesBehaviour extends Behaviour {
       bubble.radius = 0.0;
     }
 
-    bubble.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    bubble.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
     bubble.popping = false;
   }
 
@@ -167,8 +159,7 @@ class BubblesBehaviour extends Behaviour {
     bubble.popping = true;
     bubble.radius = 0.2 * bubble.targetRadius;
     bubble.targetRadius *= 0.5;
-    if (onPop != null)
-      onPop(wasTap);
+    if (onPop != null) onPop!(wasTap);
   }
 
   @override
@@ -183,15 +174,14 @@ class BubblesBehaviour extends Behaviour {
   /// Called when the behaviour got new options and should update accordingly.
   @protected
   @mustCallSuper
-  void onOptionsUpdate(BubbleOptions oldOptions) {
-    if (bubbles == null)
-      return;
-    if (bubbles.length > options.bubbleCount)
-      bubbles.removeRange(0, bubbles.length - options.bubbleCount);
-    else if (bubbles.length < options.bubbleCount) {
-      final int numToSpawn = options.bubbleCount - bubbles.length;
+  void onOptionsUpdate(BubbleOptions? oldOptions) {
+    if (bubbles == null) return;
+    if (bubbles!.length > options.bubbleCount)
+      bubbles!.removeRange(0, bubbles!.length - options.bubbleCount);
+    else if (bubbles!.length < options.bubbleCount) {
+      final int numToSpawn = options.bubbleCount - bubbles!.length;
       final newBubbles = generateBubbles(numToSpawn);
-      bubbles.addAll(newBubbles);
+      bubbles!.addAll(newBubbles);
     }
   }
 
@@ -206,12 +196,12 @@ class BubblesBehaviour extends Behaviour {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    for (var bubble in bubbles) {
-      paint.color = bubble.color;
+    for (var bubble in bubbles!) {
+      paint.color = bubble.color!;
       if (!bubble.popping) {
-        canvas.drawCircle(bubble.position, bubble.radius, paint);
+        canvas.drawCircle(bubble.position, bubble.radius!, paint);
       } else {
-        final double radiusSqrt = bubble.radius * sqrtInverse;
+        final double radiusSqrt = bubble.radius! * sqrtInverse;
         final double targetRadiusSqrt = bubble.targetRadius * sqrtInverse;
         canvas.drawLine(
           bubble.position + Offset(radiusSqrt, radiusSqrt),
@@ -233,13 +223,13 @@ class BubblesBehaviour extends Behaviour {
           bubble.position + Offset(-targetRadiusSqrt, -targetRadiusSqrt),
           paint,
         );
-        canvas.drawLine(bubble.position + Offset(0.0, bubble.radius),
+        canvas.drawLine(bubble.position + Offset(0.0, bubble.radius!),
             bubble.position + Offset(0.0, bubble.targetRadius), paint);
-        canvas.drawLine(bubble.position + Offset(0.0, -bubble.radius),
+        canvas.drawLine(bubble.position + Offset(0.0, -bubble.radius!),
             bubble.position + Offset(0.0, -bubble.targetRadius), paint);
-        canvas.drawLine(bubble.position + Offset(bubble.radius, 0.0),
+        canvas.drawLine(bubble.position + Offset(bubble.radius!, 0.0),
             bubble.position + Offset(bubble.targetRadius, 0.0), paint);
-        canvas.drawLine(bubble.position + Offset(-bubble.radius, 0.0),
+        canvas.drawLine(bubble.position + Offset(-bubble.radius!, 0.0),
             bubble.position + Offset(-bubble.targetRadius, 0.0), paint);
       }
     }
@@ -248,11 +238,11 @@ class BubblesBehaviour extends Behaviour {
   @override
   bool tick(double delta, Duration elapsed) {
     if (!isInitialized) return false;
-    for (var bubble in bubbles) {
-      bubble.radius +=
+    for (var bubble in bubbles!) {
+      bubble.radius = bubble.radius! +
           delta * (bubble.popping ? options.popRate : options.growthRate);
 
-      if (bubble.radius >= bubble.targetRadius) {
+      if (bubble.radius! >= bubble.targetRadius) {
         if (bubble.popping)
           _initBubble(bubble);
         else
@@ -277,11 +267,11 @@ class BubblesBehaviour extends Behaviour {
   }
 
   void _onTap(BuildContext context, Offset globalPosition) {
-    RenderBox renderBox = context.findRenderObject();
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
     var localPosition = renderBox.globalToLocal(globalPosition);
-    for (var bubble in bubbles) {
+    for (var bubble in bubbles!) {
       if ((bubble.position - localPosition).distanceSquared <
-          bubble.radius * bubble.radius * 1.2) {
+          bubble.radius! * bubble.radius! * 1.2) {
         _popBubble(bubble, true);
       }
     }

@@ -1,5 +1,5 @@
-import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
 import 'package:meta/meta.dart';
@@ -9,16 +9,16 @@ import 'animated_background.dart';
 /// Holds the information of a line used in a [RacingLinesBehaviour].
 class Line {
   /// The position of the start of this line.
-  Offset position;
+  Offset? position;
 
   /// The speed of this line.
-  double speed;
+  late double speed;
 
   /// The thickness of this line.
-  int thickness;
+  late int thickness;
 
   /// The color of this line.
-  Color color;
+  Color? color;
 }
 
 /// The direction in which the lines should move
@@ -42,27 +42,26 @@ class RacingLinesBehaviour extends Behaviour {
 
   /// Creates a new racing lines behaviour
   RacingLinesBehaviour({this.direction = LineDirection.Ltr, int numLines = 50})
-      : assert(direction != null),
-        assert(numLines != null),
-        assert(numLines >= 0) {
+      : assert(numLines >= 0) {
     _numLines = numLines;
   }
 
   /// The list of lines used by the behaviour to hold the spawned lines.
   @protected
-  List<Line> lines;
+  List<Line>? lines;
 
-  int _numLines;
+  int? _numLines;
 
   /// Gets the number of lines in the background.
-  int get numLines => _numLines;
+  int? get numLines => _numLines;
 
   /// Sets the number of lines in the background.
   set numLines(value) {
     if (isInitialized) {
-      if (value > lines.length)
-        lines.addAll(generateLines(value - lines.length));
-      else if (value < lines.length) lines.removeRange(0, lines.length - value);
+      if (value > lines!.length)
+        lines!.addAll(generateLines(value - lines!.length));
+      else if (value < lines!.length)
+        lines!.removeRange(0, lines!.length - value as int);
     }
     _numLines = value;
   }
@@ -91,8 +90,8 @@ class RacingLinesBehaviour extends Behaviour {
         (direction == LineDirection.Ltr || direction == LineDirection.Rtl);
     final bool normalDirection =
         (direction == LineDirection.Ltr || direction == LineDirection.Ttb);
-    final double sizeCrossAxis = axisHorizontal ? size.height : size.width;
-    final double sizeMainAxis = axisHorizontal ? size.width : size.height;
+    final double sizeCrossAxis = axisHorizontal ? size!.height : size!.width;
+    final double sizeMainAxis = axisHorizontal ? size!.width : size!.height;
     final double spawnCrossAxis = random.nextInt(100) * (sizeCrossAxis / 100);
     double spawnMainAxis = 0.0;
 
@@ -108,19 +107,17 @@ class RacingLinesBehaviour extends Behaviour {
         ? Offset(spawnMainAxis, spawnCrossAxis)
         : Offset(spawnCrossAxis, spawnMainAxis);
     line.thickness = random.nextInt(2) + 2;
-    line.color = HSVColor
-        .fromAHSV(
-          random.nextDouble() * 0.3 + 0.2,
-          random.nextInt(45) * 8.0,
-          random.nextDouble() * 0.6 + 0.3,
-          random.nextDouble() * 0.6 + 0.3,
-        )
-        .toColor();
+    line.color = HSVColor.fromAHSV(
+      random.nextDouble() * 0.3 + 0.2,
+      random.nextInt(45) * 8.0,
+      random.nextDouble() * 0.6 + 0.3,
+      random.nextDouble() * 0.6 + 0.3,
+    ).toColor();
   }
 
   @override
   void init() {
-    lines = generateLines(numLines);
+    lines = generateLines(numLines!);
   }
 
   @override
@@ -144,18 +141,18 @@ class RacingLinesBehaviour extends Behaviour {
         (direction == LineDirection.Ltr || direction == LineDirection.Ttb)
             ? 1
             : -1;
-    for (var line in lines) {
+    for (var line in lines!) {
       final tailDirection = axisHorizontal
           ? Offset(sign * line.speed / 2.0, 0.0)
           : Offset(0.0, sign * line.speed / 2.0);
       final headDelta =
           axisHorizontal ? Offset(20.0 * sign, 0.0) : Offset(0.0, 20.0 * sign);
-      final target = line.position + tailDirection;
+      final target = line.position! + tailDirection;
       paint
-        ..shader = ui.Gradient.linear(line.position, target - headDelta,
-            <Color>[line.color.withAlpha(0), line.color])
+        ..shader = ui.Gradient.linear(line.position!, target - headDelta,
+            <Color>[line.color!.withAlpha(0), line.color!])
         ..strokeWidth = line.thickness.toDouble();
-      canvas.drawLine(line.position, target, paint);
+      canvas.drawLine(line.position!, target, paint);
     }
   }
 
@@ -168,18 +165,21 @@ class RacingLinesBehaviour extends Behaviour {
             ? 1
             : -1;
     if (axisHorizontal) {
-      for (var line in lines) {
-        line.position = line.position.translate(delta * line.speed * sign, 0.0);
-        if ((direction == LineDirection.Ltr && line.position.dx > size.width) ||
-            (direction == LineDirection.Rtl && line.position.dx < 0))
+      for (var line in lines!) {
+        line.position =
+            line.position!.translate(delta * line.speed * sign, 0.0);
+        if ((direction == LineDirection.Ltr &&
+                line.position!.dx > size!.width) ||
+            (direction == LineDirection.Rtl && line.position!.dx < 0))
           initLine(line);
       }
     } else {
-      for (var line in lines) {
-        line.position = line.position.translate(0.0, delta * line.speed * sign);
+      for (var line in lines!) {
+        line.position =
+            line.position!.translate(0.0, delta * line.speed * sign);
         if ((direction == LineDirection.Ttb &&
-                line.position.dy > size.height) ||
-            (direction == LineDirection.Btt && line.position.dy < 0))
+                line.position!.dy > size!.height) ||
+            (direction == LineDirection.Btt && line.position!.dy < 0))
           initLine(line);
       }
     }
