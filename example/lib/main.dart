@@ -18,8 +18,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-          onPrimary: Colors.black,
-          primary: Color(0xffe0e0e0),
+          foregroundColor: Colors.black,
+          backgroundColor: Color(0xffe0e0e0),
         )),
       ),
       home: new MyHomePage(title: 'Animated Background Demo'),
@@ -37,7 +37,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  static const numBehaviours = 6;
+  static const numBehaviours = 7;
 
   // Particles
   ParticleType? _particleType = ParticleType.Image;
@@ -160,7 +160,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         Text('Behaviour: ${_behaviour.runtimeType.toString()}'),
         SizedBox(height: 10.0),
       ]
-        ..addAll(_behaviour is ParticleBehaviour
+        ..addAll(_behaviour is ParticleBehaviour ||
+                _behaviour is MultipleImagesParticleBehavior
             ? _buildParticleSettings()
             : Iterable.empty())
         ..addAll(_behaviour is RacingLinesBehaviour
@@ -652,6 +653,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         );
       case 5:
         return SpaceBehaviour();
+      case 6:
+        return RainMultipleImagesParticleBehaviour(
+          options: particleOptions.toMultipleImagesParticleOptions(
+            images: [
+              Image.asset('assets/images/icy_logo.png'),
+              Image.asset('assets/images/star_stroke.png'),
+              Image.asset('assets/images/star.png'),
+            ],
+          ),
+        );
     }
 
     return RandomParticleBehaviour(
