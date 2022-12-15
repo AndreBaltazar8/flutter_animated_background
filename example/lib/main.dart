@@ -42,37 +42,51 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Animated Background Example',
+        ),
+      ),
       body: AnimatedBackground(
-          child: Text('test'), vsync: this, behaviour: BubblesBehaviour()),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        vsync: this,
+        // behaviour: RandomParticleBehaviour(
+        //   options: ParticleOptions(
+        //     image: Image.network(
+        //       'https://www.pngmart.com/files/8/Cockroach-PNG-Transparent-File.png',
+        //     ),
+        //     maxOpacity: 1,
+        //     spawnMaxRadius: 100,
+        //     spawnMaxSpeed: 100,
+        //     spawnMinSpeed: 50,
+        //   ),
+        // ),
+
+        behaviour: RainMultipleImagesParticleBehaviour(
+          options: MultipleImagesPartialOptions(
+            images: [
+              Image.network(
+                'https://www.pngmart.com/files/8/Cockroach-PNG-Transparent-File.png',
+              ),
+              Image.network(
+                'https://static.vecteezy.com/system/resources/previews/001/200/028/original/dog-png.png',
+              ),
+              Image.network(
+                'https://www.pngitem.com/pimgs/m/247-2477379_transparent-background-cartoon-house-png-png-download.png',
+              ),
+            ],
+            // particleCount: 5,
+            spawnMinRadius: 1,
+            spawnMaxRadius: 70,
+            spawnMaxSpeed: 100,
+            spawnMinSpeed: 50,
+          ),
+        ),
+        child: const SizedBox(),
+      ),
     );
   }
 }

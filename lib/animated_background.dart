@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
+export 'bubbles.dart';
+export 'lines.dart';
+export 'multiple_particles.dart';
 export 'particles.dart';
 export 'rectangles.dart';
-export 'lines.dart';
-export 'bubbles.dart';
 export 'space.dart';
 
 /// A widget that renders an animated background.
@@ -28,10 +29,7 @@ class AnimatedBackground extends RenderObjectWidget {
     required this.child,
     required this.vsync,
     required this.behaviour,
-  })   : assert(child != null),
-        assert(vsync != null),
-        assert(behaviour != null),
-        super(key: key);
+  }) : super(key: key);
 
   @override
   createRenderObject(BuildContext context) => RenderAnimatedBackground(
@@ -63,12 +61,13 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
 
   @override
   void forgetChild(Element child) {
+    super.forgetChild(child);
     assert(child == _child);
     _child = null;
   }
 
   @override
-  void insertChildRenderObject(RenderObject child, slot) {
+  void insertRenderObjectChild(RenderObject child, slot) {
     final RenderObjectWithChildMixin<RenderObject> renderObject =
         this.renderObject;
     assert(slot == null);
@@ -78,12 +77,12 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   }
 
   @override
-  void moveChildRenderObject(RenderObject child, slot) {
+  void moveRenderObjectChild(RenderObject child, slot, _) {
     assert(false);
   }
 
   @override
-  void removeChildRenderObject(RenderObject child) {
+  void removeRenderObjectChild(RenderObject child, _) {
     final RenderAnimatedBackground renderObject = this.renderObject;
     assert(renderObject.child == child);
     renderObject.child = null;
@@ -209,9 +208,7 @@ class RenderAnimatedBackground extends RenderProxyBox {
   RenderAnimatedBackground({
     required TickerProvider vsync,
     required Behaviour behaviour,
-  })   : assert(vsync != null),
-        assert(behaviour != null),
-        _vsync = vsync,
+  })  : _vsync = vsync,
         _behaviour = behaviour {
     _behaviour.renderObject = this;
   }
