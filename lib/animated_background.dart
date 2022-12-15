@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 
 export 'bubbles.dart';
 export 'lines.dart';
+export 'multiple_particles.dart';
 export 'particles.dart';
 export 'rectangles.dart';
 export 'space.dart';
@@ -65,7 +66,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
     assert(child == _child);
     _child = null;
   }
-  
+
   @override
   void insertRenderObjectChild(RenderObject child, slot) {
     final RenderObjectWithChildMixin<RenderObject> renderObject =
@@ -80,6 +81,7 @@ class _AnimatedBackgroundElement extends RenderObjectElement {
   void moveRenderObjectChild(RenderObject child, oldSlot, newSlot) {
     assert(false);
   }
+
   @override
   void removeRenderObjectChild(RenderObject child, slot) {
     final RenderAnimatedBackground renderObject = this.renderObject;
@@ -207,7 +209,7 @@ class RenderAnimatedBackground extends RenderProxyBox {
   RenderAnimatedBackground({
     required TickerProvider vsync,
     required Behaviour behaviour,
-  })   : _vsync = vsync,
+  })  : _vsync = vsync,
         _behaviour = behaviour {
     _behaviour.renderObject = this;
   }

@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import 'animated_background.dart';
 import 'image_helper.dart';
@@ -463,5 +462,25 @@ class RandomParticleBehaviour extends ParticleBehaviour {
       if (p.radius < options.spawnMinRadius ||
           p.radius > options.spawnMaxRadius) initRadius(p);
     }
+  }
+}
+
+extension ParticleOptionsExtension on ParticleOptions {
+  MultipleImagesParticleOptions toMultipleImagesParticleOptions({
+    required List<Image> images,
+  }) {
+    return MultipleImagesParticleOptions(
+      images: images,
+      baseColor: baseColor,
+      spawnOpacity: spawnOpacity,
+      opacityChangeRate: opacityChangeRate,
+      minOpacity: minOpacity,
+      maxOpacity: maxOpacity,
+      spawnMinSpeed: spawnMinSpeed,
+      spawnMaxSpeed: spawnMaxSpeed,
+      spawnMinRadius: spawnMinRadius,
+      spawnMaxRadius: spawnMaxRadius,
+      particleCount: particleCount,
+    );
   }
 }
