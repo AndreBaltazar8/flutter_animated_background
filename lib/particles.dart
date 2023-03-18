@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -22,11 +23,11 @@ class _NotSetImageProvider extends ImageProvider<_NotSetImageProvider> {
 
 /// Holds the particle configuration information for a [ParticleBehaviour].
 class ParticleOptions {
-  /// The image used by the particle. It is mutually exclusive with [baseColor].
+  /// The image used by the particle. It is mutually exclusive with [colors].
   final Image? image;
 
   /// The color used by the particle. It is mutually exclusive with [image].
-  final Color baseColor;
+  final List<Color> colors;
 
   /// The minimum radius of a spawned particle. Changing this value should cause
   /// the particles to update, in case their current radius is smaller than the
@@ -74,7 +75,7 @@ class ParticleOptions {
   /// Default values are assigned for arguments that are omitted.
   const ParticleOptions({
     this.image,
-    this.baseColor = Colors.black,
+    this.colors = const [Colors.black],
     this.spawnMinRadius = 1.0,
     this.spawnMaxRadius = 10.0,
     this.spawnMinSpeed = 150.0,
@@ -103,7 +104,7 @@ class ParticleOptions {
   /// replaced with new values.
   ParticleOptions copyWith({
     Image? image = const _NotSetImage(),
-    Color? baseColor,
+    List<Color>? colors,
     double? spawnMinRadius,
     double? spawnMaxRadius,
     double? spawnMinSpeed,
@@ -116,7 +117,7 @@ class ParticleOptions {
   }) {
     return ParticleOptions(
       image: image is _NotSetImage ? this.image : image,
-      baseColor: baseColor ?? this.baseColor,
+      colors: colors ?? this.colors,
       spawnMinRadius: spawnMinRadius ?? this.spawnMinRadius,
       spawnMaxRadius: spawnMaxRadius ?? this.spawnMaxRadius,
       spawnMinSpeed: spawnMinSpeed ?? this.spawnMinSpeed,
@@ -137,6 +138,9 @@ class Particle {
 
   /// The Y coordinate of the center of this particle.
   double cy = 0.0;
+
+  /// Color of each Particle
+  Color? color;
 
   /// The X component of the direction of this particle. This is usually scaled
   /// by the speed of the particle, make it a non-normalized component of direction.
@@ -303,9 +307,10 @@ abstract class ParticleBehaviour extends Behaviour {
   @override
   void paint(PaintingContext context, Offset offset) {
     final Canvas canvas = context.canvas;
+
     for (Particle particle in particles!) {
       if (particle.alpha == 0.0) continue;
-      _paint!.color = options.baseColor.withOpacity(particle.alpha);
+      _paint!.color = particle.color!.withOpacity(particle.alpha);
 
       if (_particleImage != null) {
         Rect dst = Rect.fromLTRB(
@@ -409,6 +414,9 @@ class RandomParticleBehaviour extends ParticleBehaviour {
   void initParticle(Particle p) {
     initPosition(p);
     initRadius(p);
+
+    final random = Random();
+    p.color = options.colors[random.nextInt(options.colors.length)];
 
     final double deltaSpeed = (options.spawnMaxSpeed - options.spawnMinSpeed);
     double speed = random.nextDouble() * deltaSpeed + options.spawnMinSpeed;
