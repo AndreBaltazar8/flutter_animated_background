@@ -45,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   ParticleOptions particleOptions = ParticleOptions(
     image: Image.asset('assets/images/star_stroke.png'),
-    baseColor: Colors.blue,
+    colors: [Colors.blue],
     spawnOpacity: 0.0,
     opacityChangeRate: 0.25,
     minOpacity: 0.1,
